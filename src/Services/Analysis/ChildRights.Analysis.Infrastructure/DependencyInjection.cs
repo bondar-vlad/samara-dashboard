@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<IAnalysisDbContext>(sp => sp.GetRequiredService<AnalysisDbContext>());
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AnalysisDbContext>());
         services.AddScoped<IDataSeeder, UniversityCatalogSeeder>();
+        services.AddScoped<IDataSeeder, AdmissionCatalogSeeder>();
 
         // Resilient typed client to the Education microservice.
         var educationBaseUrl = configuration["Services:Education"] ?? "http://localhost:5101";

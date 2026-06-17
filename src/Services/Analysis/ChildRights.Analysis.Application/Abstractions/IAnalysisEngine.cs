@@ -1,5 +1,6 @@
 using ChildRights.BuildingBlocks.Domain.SharedKernel;
 using ChildRights.Analysis.Application.Common;
+using ChildRights.Analysis.Domain.Enums;
 
 namespace ChildRights.Analysis.Application.Abstractions;
 
@@ -14,5 +15,6 @@ public interface IAnalysisEngine
         Guid studentId,
         AnalysisTrigger trigger,
         string? modelName = null,
+        AnalysisKind kind = AnalysisKind.Profile,
         CancellationToken cancellationToken = default);
 }

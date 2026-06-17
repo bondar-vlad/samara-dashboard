@@ -6,6 +6,7 @@ using ChildRights.Analysis.Application.Runs.Commands;
 using ChildRights.Analysis.Application.Runs.Queries;
 using ChildRights.Analysis.Application.Universities.Commands;
 using ChildRights.Analysis.Application.Universities.Queries;
+using ChildRights.Analysis.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChildRights.Analysis.Api.Controllers;
@@ -18,14 +19,18 @@ public sealed class AnalysisController(IDispatcher dispatcher, IAiAnalysisProvid
     [HttpGet("models")]
     public IActionResult GetModels() => Ok(providerFactory.AvailableModels);
 
-    /// <summary>Runs an on-demand analysis for a single pupil (optionally choosing a model).</summary>
+    /// <summary>
+    /// Runs an on-demand analysis for a single pupil. <paramref name="kind"/> selects the
+    /// analysis: <c>Profile</c> (default), <c>Admission</c> (4th НМТ subject + direction), or <c>All</c>.
+    /// </summary>
     [HttpPost("students/{studentId:guid}/run")]
     public async Task<IActionResult> RunStudent(
         Guid studentId,
         [FromQuery] string? model,
-        CancellationToken cancellationToken)
+        [FromQuery] AnalysisKind kind = AnalysisKind.Profile,
+        CancellationToken cancellationToken = default)
         => ToResult(await Dispatcher.Send(
-            new RunStudentAnalysisCommand(studentId, AnalysisTrigger.OnDemand, model), cancellationToken));
+            new RunStudentAnalysisCommand(studentId, AnalysisTrigger.OnDemand, model, kind), cancellationToken));
 
     /// <summary>Runs a school-wide analysis and aggregates institution/community recommendations.</summary>
     [HttpPost("schools/{schoolId:guid}/run")]

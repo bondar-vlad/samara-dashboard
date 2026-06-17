@@ -3,7 +3,9 @@ using ChildRights.BuildingBlocks.Domain.SharedKernel;
 using ChildRights.Contracts.Analysis;
 using ChildRights.Analysis.Application.Abstractions;
 using ChildRights.Analysis.Application.Common;
+using ChildRights.Analysis.Domain.Admission;
 using ChildRights.Analysis.Domain.Entities;
+using ChildRights.Analysis.Domain.Enums;
 using ChildRights.Analysis.Domain.Rules;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -22,6 +24,7 @@ internal sealed class AnalysisEngine(
         Guid studentId,
         AnalysisTrigger trigger,
         string? modelName = null,
+        AnalysisKind kind = AnalysisKind.Profile,
         CancellationToken cancellationToken = default)
     {
         var provider = providerFactory.Resolve(modelName);
@@ -60,40 +63,73 @@ internal sealed class AnalysisEngine(
                 profile.SubjectAverages.ToDictionary(s => s.Subject, s => s.Average),
                 profile.TopicAverages.Select(t => new TopicScore(t.Subject, t.Topic, t.Average)).ToList());
 
-            var result = await provider.AnalyzeAsync(new AnalysisRequest(snapshot), cancellationToken);
+            var allFlags = new List<RedFlag>();
+            var allRecommendations = new List<Recommendation>();
+            var summaries = new List<string>();
+            AnalysisResult? profileResult = null;
 
-            var flags = result.Flags
-                .Select(f => new RedFlag(
-                    Guid.NewGuid(), f.RuleCode, AnalysisScope.Student, studentId, profile.FullName,
-                    f.Severity, f.Title, f.Description, f.SourceAgency, f.TargetAudiences,
-                    f.RecommendedActions, provider.ModelName, clock.UtcNow))
-                .ToList();
+            RedFlag MapFlag(Domain.Rules.FlagFinding f) => new(
+                Guid.NewGuid(), f.RuleCode, AnalysisScope.Student, studentId, profile.FullName,
+                f.Severity, f.Title, f.Description, f.SourceAgency, f.TargetAudiences,
+                f.RecommendedActions, provider.ModelName, clock.UtcNow);
 
-            var recommendations = result.Recommendations
-                .Select(r => new Recommendation(
-                    Guid.NewGuid(), AnalysisScope.Student, studentId, profile.FullName,
-                    r.Kind, r.Title, r.Summary, r.Rationale, r.Confidence, provider.ModelName, clock.UtcNow))
-                .ToList();
+            Recommendation MapRecommendation(Domain.Rules.RecommendationFinding r) => new(
+                Guid.NewGuid(), AnalysisScope.Student, studentId, profile.FullName,
+                r.Kind, r.Title, r.Summary, r.Rationale, r.Confidence, provider.ModelName, clock.UtcNow);
 
-            context.RedFlags.AddRange(flags);
-            context.Recommendations.AddRange(recommendations);
-            run.Complete(flags.Count, recommendations.Count, result.Summary, clock.UtcNow);
+            // Pass 1 — profile-education analysis (the original behaviour, the default).
+            if (kind is AnalysisKind.Profile or AnalysisKind.All)
+            {
+                profileResult = await provider.AnalyzeAsync(new AnalysisRequest(snapshot), cancellationToken);
+                allFlags.AddRange(profileResult.Flags.Select(MapFlag));
+                allRecommendations.AddRange(profileResult.Recommendations.Select(MapRecommendation));
+                summaries.Add(profileResult.Summary);
+            }
+
+            // Pass 2 — admission analysis (4th НМТ subject + admission direction).
+            if (kind is AnalysisKind.Admission or AnalysisKind.All)
+            {
+                var choice = await context.StudentAdmissionChoices
+                    .FirstOrDefaultAsync(c => c.StudentId == studentId, cancellationToken);
+                var directions = await context.AdmissionDirections.ToListAsync(cancellationToken);
+
+                var admission = AdmissionRules.Evaluate(
+                    snapshot.SubjectAverages,
+                    snapshot.TopicAverages,
+                    choice?.NmtScores ?? new Dictionary<NmtSubject, int>(),
+                    choice?.ChosenFourthSubject,
+                    choice?.DesiredDirectionCode,
+                    directions);
+
+                allFlags.AddRange(admission.Flags.Select(MapFlag));
+                allRecommendations.AddRange(admission.Recommendations.Select(MapRecommendation));
+                summaries.Add(
+                    $"Вступний аналіз: {admission.Flags.Count} флаг(ів), {admission.Recommendations.Count} рекомендаці(й).");
+            }
+
+            var summary = string.Join(" ", summaries);
+            context.RedFlags.AddRange(allFlags);
+            context.Recommendations.AddRange(allRecommendations);
+            run.Complete(allFlags.Count, allRecommendations.Count, summary, clock.UtcNow);
             await context.SaveChangesAsync(cancellationToken);
 
-            await UpsertProfileInsightAsync(snapshot, result, cancellationToken);
+            if (profileResult is not null)
+            {
+                await UpsertProfileInsightAsync(snapshot, profileResult, cancellationToken);
+                await PublishProfileRecommendationAsync(snapshot, profileResult, cancellationToken);
+            }
 
-            await PublishAsync(flags, recommendations, cancellationToken);
-            await PublishProfileRecommendationAsync(snapshot, result, cancellationToken);
+            await PublishAsync(allFlags, allRecommendations, cancellationToken);
 
             logger.LogInformation(
-                "Analysis run {RunId} for student {StudentId} via {Model}: {Flags} flags, {Recs} recommendations.",
-                run.Id, studentId, provider.ModelName, flags.Count, recommendations.Count);
+                "Analysis run {RunId} ({Kind}) for student {StudentId} via {Model}: {Flags} flags, {Recs} recommendations.",
+                run.Id, kind, studentId, provider.ModelName, allFlags.Count, allRecommendations.Count);
 
             return new AnalysisRunResultDto(
                 run.Id, provider.ModelName, run.Status.ToString(),
-                flags.Count, recommendations.Count, result.Summary,
-                flags.Select(f => f.ToDto()).ToList(),
-                recommendations.Select(r => r.ToDto()).ToList());
+                allFlags.Count, allRecommendations.Count, summary,
+                allFlags.Select(f => f.ToDto()).ToList(),
+                allRecommendations.Select(r => r.ToDto()).ToList());
         }
         catch (Exception ex)
         {

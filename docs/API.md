@@ -33,7 +33,7 @@ e.g. `GET http://localhost:8080/education/api/students`.
 | Method | Route                                          | Purpose                                  |
 | ------ | ---------------------------------------------- | ---------------------------------------- |
 | GET    | `/api/analysis/models`                         | Available analysis models.               |
-| POST   | `/api/analysis/students/{studentId}/run`       | Run analysis for a pupil (`?model=`).    |
+| POST   | `/api/analysis/students/{studentId}/run`       | Run analysis for a pupil (`?model=`, `?kind=Profile\|Admission\|All`). |
 | POST   | `/api/analysis/schools/{schoolId}/run`         | Run school-wide analysis + aggregation.  |
 | GET    | `/api/analysis/runs`                           | Recent analysis runs (audit trail).      |
 | GET    | `/api/analysis/students/{id}/university-fit`   | Ranked specialty fit + improvement advice (`?take=&cluster=`). |
@@ -44,6 +44,23 @@ e.g. `GET http://localhost:8080/education/api/students`.
 | POST   | `/api/red-flags/{id}/resolve`                  | Resolve a red flag.                      |
 | GET    | `/api/recommendations`                         | List recommendations (`?scope=&subjectId=`). |
 | GET    | `/api/dashboard/summary`                       | Dashboard KPIs.                          |
+
+## Admission — "second analysis" (`5105`)
+
+The admission analysis (`?kind=Admission` on the run endpoint) covers two widgets: the **4th
+НМТ subject** choice and the **admission direction** choice. НМТ scores and pupil choices are
+stored in the Analysis service, so the Education service is untouched. One direction groups many
+specialties (1-to-many).
+
+| Method | Route                                                       | Purpose                                          |
+| ------ | ----------------------------------------------------------- | ------------------------------------------------ |
+| GET    | `/api/admission/nmt-subjects`                               | List НМТ subjects (mandatory + 4th-subject options). |
+| GET    | `/api/admission/directions`                                 | List admission directions + specialties + НМТ coefficients (`?cluster=`). |
+| PUT    | `/api/admission/students/{id}/choice`                       | Submit НМТ scores / chosen 4th subject / desired direction (any subset). |
+| GET    | `/api/admission/students/{id}/fourth-subject`               | **Widget 1**: recommended 4th subject vs the pupil's choice (match / not-match). |
+| GET    | `/api/admission/schools/{schoolId}/fourth-subject-students` | **Widget 1**: pupils list with chosen vs recommended 4th subject. |
+| GET    | `/api/admission/students/{id}/direction`                    | **Widget 2**: recommended direction (НМТ coefficients + topics) vs the pupil's choice. |
+| GET    | `/api/admission/schools/{schoolId}/direction-students`      | **Widget 2**: pupils list with chosen vs recommended direction. |
 
 ## Universities (`5105`)
 

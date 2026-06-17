@@ -24,6 +24,12 @@ public sealed class AnalysisDbContext(DbContextOptions<AnalysisDbContext> option
 
     public DbSet<ProgramInterest> ProgramInterests => Set<ProgramInterest>();
 
+    public DbSet<AdmissionDirection> AdmissionDirections => Set<AdmissionDirection>();
+
+    public DbSet<Specialty> Specialties => Set<Specialty>();
+
+    public DbSet<StudentAdmissionChoice> StudentAdmissionChoices => Set<StudentAdmissionChoice>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("analysis");

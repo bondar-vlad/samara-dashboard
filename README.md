@@ -253,10 +253,15 @@ Full endpoint list: [docs/API.md](docs/API.md).
   profile, create an academy course for a community/region.
 - **University guidance**: ranked specialty fit with concrete subject/topic improvement
   gaps, and depersonalised per-specialty demand for universities.
+- **Admission analysis (the "second analysis", `?kind=Admission`)**: recommends the pupil's
+  **4th НМТ subject** and their **admission direction** (a direction groups many specialties).
+  The direction score blends the конкурсний бал (НМТ scores × per-direction coefficients) with
+  topic fit, and raises a red flag when the pupil's own choice differs from the recommendation.
 
 The rules are pure, unit-testable domain logic in
 `src/Services/Analysis/ChildRights.Analysis.Domain` (`StudentRiskRules`,
-`ProfileScoringMap`, `UniversityFitCalculator`).
+`ProfileScoringMap`, `UniversityFitCalculator`, `AdmissionRules`,
+`FourthSubjectRecommender`, `AdmissionDirectionRecommender`).
 
 ---
 

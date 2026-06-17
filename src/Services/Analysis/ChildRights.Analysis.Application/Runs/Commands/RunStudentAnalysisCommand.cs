@@ -3,6 +3,7 @@ using ChildRights.BuildingBlocks.Domain.Results;
 using ChildRights.BuildingBlocks.Domain.SharedKernel;
 using ChildRights.Analysis.Application.Abstractions;
 using ChildRights.Analysis.Application.Common;
+using ChildRights.Analysis.Domain.Enums;
 
 namespace ChildRights.Analysis.Application.Runs.Commands;
 
@@ -10,7 +11,8 @@ namespace ChildRights.Analysis.Application.Runs.Commands;
 public sealed record RunStudentAnalysisCommand(
     Guid StudentId,
     AnalysisTrigger Trigger = AnalysisTrigger.OnDemand,
-    string? ModelName = null) : ICommand<AnalysisRunResultDto>;
+    string? ModelName = null,
+    AnalysisKind Kind = AnalysisKind.Profile) : ICommand<AnalysisRunResultDto>;
 
 internal sealed class RunStudentAnalysisCommandHandler(IAnalysisEngine engine)
     : ICommandHandler<RunStudentAnalysisCommand, AnalysisRunResultDto>
@@ -18,5 +20,6 @@ internal sealed class RunStudentAnalysisCommandHandler(IAnalysisEngine engine)
     public async Task<Result<AnalysisRunResultDto>> Handle(
         RunStudentAnalysisCommand command,
         CancellationToken cancellationToken)
-        => await engine.AnalyzeStudentAsync(command.StudentId, command.Trigger, command.ModelName, cancellationToken);
+        => await engine.AnalyzeStudentAsync(
+            command.StudentId, command.Trigger, command.ModelName, command.Kind, cancellationToken);
 }

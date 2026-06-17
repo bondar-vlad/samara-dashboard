@@ -20,5 +20,11 @@ public interface IAnalysisDbContext
 
     DbSet<ProgramInterest> ProgramInterests { get; }
 
+    DbSet<AdmissionDirection> AdmissionDirections { get; }
+
+    DbSet<Specialty> Specialties { get; }
+
+    DbSet<StudentAdmissionChoice> StudentAdmissionChoices { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

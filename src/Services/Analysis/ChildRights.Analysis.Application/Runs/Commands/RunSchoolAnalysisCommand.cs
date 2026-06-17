@@ -43,7 +43,7 @@ internal sealed class RunSchoolAnalysisCommandHandler(
         foreach (var student in students)
         {
             var result = await engine.AnalyzeStudentAsync(
-                student.Id, command.Trigger, command.ModelName, cancellationToken);
+                student.Id, command.Trigger, command.ModelName, cancellationToken: cancellationToken);
 
             totalFlags += result.FlagsProduced;
             totalRecommendations += result.RecommendationsProduced;
