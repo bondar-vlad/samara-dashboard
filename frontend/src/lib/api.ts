@@ -6,6 +6,12 @@ import type {
   UniversityFit,
   AnalysisRunResult,
   ReformReference,
+  NmtSubject,
+  SchoolFourthSubjects,
+  StudentFourthSubject,
+  AdmissionDirection,
+  SchoolDirections,
+  StudentDirection,
 } from "./types";
 
 /**
@@ -56,4 +62,27 @@ export const api = {
 
   runStudentAnalysis: (id: string) =>
     postJson<AnalysisRunResult>(`${ANL}/analysis/students/${id}/run`),
+
+  // NMT fourth-subject (admission)
+  getNmtSubjects: () => getJson<NmtSubject[]>(`${ANL}/admission/nmt-subjects`),
+
+  getSchoolFourthSubjects: (schoolId: string) =>
+    getJson<SchoolFourthSubjects>(
+      `${ANL}/admission/schools/${schoolId}/fourth-subject-students`,
+    ),
+
+  getStudentFourthSubject: (id: string) =>
+    getJson<StudentFourthSubject>(`${ANL}/admission/students/${id}/fourth-subject`),
+
+  // Admission direction (NMT-based profile)
+  getAdmissionDirections: () =>
+    getJson<AdmissionDirection[]>(`${ANL}/admission/directions`),
+
+  getSchoolDirections: (schoolId: string) =>
+    getJson<SchoolDirections>(
+      `${ANL}/admission/schools/${schoolId}/direction-students`,
+    ),
+
+  getStudentDirection: (id: string) =>
+    getJson<StudentDirection>(`${ANL}/admission/students/${id}/direction`),
 };

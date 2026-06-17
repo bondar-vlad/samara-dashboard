@@ -161,3 +161,119 @@ export interface AnalysisRunResult {
   recommendationsProduced: number;
   summary: string;
 }
+
+// ─── NMT fourth-subject (admission) ──────────────────────────────────────────
+
+/** GET /analysis/api/admission/nmt-subjects */
+export interface NmtSubject {
+  subject: string;
+  name: string;
+  mandatory: boolean;
+  fourthSubjectOption: boolean;
+}
+
+export interface RankedSubject {
+  subject: string;
+  subjectName: string;
+  score: number;
+  evidenceCount: number;
+}
+
+/** GET /analysis/api/admission/students/{id}/fourth-subject */
+export interface StudentFourthSubject {
+  studentId: string;
+  chosenSubject: string | null;
+  chosenSubjectName: string | null;
+  recommendedSubject: string | null;
+  recommendedSubjectName: string | null;
+  hasChoice: boolean;
+  isMatch: boolean;
+  ranked: RankedSubject[];
+  rationale: string;
+}
+
+export interface FourthSubjectStudent {
+  studentId: string;
+  fullName: string;
+  className: string;
+  chosenSubject: string | null;
+  recommendedSubject: string | null;
+  isMatch: boolean;
+}
+
+export interface FourthSubjectDistribution {
+  subject: string;
+  subjectName: string;
+  chosenCount: number;
+  recommendedCount: number;
+}
+
+/** GET /analysis/api/admission/schools/{id}/fourth-subject-students */
+export interface SchoolFourthSubjects {
+  students: FourthSubjectStudent[];
+  distribution: FourthSubjectDistribution[];
+}
+
+// ─── Admission direction (NMT-based profile) ─────────────────────────────────
+
+export interface DirectionSpecialty {
+  code: string;
+  name: string;
+}
+
+/** GET /analysis/api/admission/directions */
+export interface AdmissionDirection {
+  code: string;
+  name: string;
+  branchOfKnowledge: string;
+  relatedCluster: string;
+  relatedClusterName: string;
+  nmtCoefficients: Record<string, number>;
+  keySubjects: string[];
+  keyTopics: string[];
+  specialties: DirectionSpecialty[];
+}
+
+export interface RankedDirection {
+  directionCode: string;
+  directionName: string;
+  competitiveScore: number | null;
+  topicFit: number;
+  combinedScore: number;
+}
+
+/** GET /analysis/api/admission/students/{id}/direction */
+export interface StudentDirection {
+  studentId: string;
+  desiredDirectionCode: string | null;
+  desiredDirectionName: string | null;
+  recommendedDirectionCode: string | null;
+  recommendedDirectionName: string | null;
+  hasChoice: boolean;
+  isMatch: boolean;
+  nmtScores: Record<string, number>;
+  ranked: RankedDirection[];
+  rationale: string;
+}
+
+export interface DirectionStudent {
+  studentId: string;
+  fullName: string;
+  className: string;
+  desiredDirectionCode: string | null;
+  recommendedDirectionCode: string | null;
+  isMatch: boolean;
+}
+
+export interface DirectionDistribution {
+  directionCode: string;
+  directionName: string;
+  chosenCount: number;
+  recommendedCount: number;
+}
+
+/** GET /analysis/api/admission/schools/{id}/direction-students */
+export interface SchoolDirections {
+  students: DirectionStudent[];
+  distribution: DirectionDistribution[];
+}

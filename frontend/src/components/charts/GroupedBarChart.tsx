@@ -40,7 +40,9 @@ export default function GroupedBarChart({
   useEffect(() => {
     if (!svgRef.current || !containerRef.current) return;
 
-    const render = () => {
+    let lastWidth = -1;
+
+    const render = (animate: boolean) => {
       const width = containerRef.current!.clientWidth;
       const margin = { top: 16, right: 16, bottom: 84, left: 36 };
       const innerW = Math.max(0, width - margin.left - margin.right);
@@ -108,6 +110,9 @@ export default function GroupedBarChart({
         .attr("class", "group")
         .attr("transform", (d) => `translate(${x0(d.label)},0)`);
 
+      // Bars drawn at final height directly. A CSS transition on the rect gives
+      // a subtle grow-in without relying on a D3 transition (which can get
+      // orphaned by re-renders and leave bars stuck at height 0).
       group
         .selectAll("rect")
         .data((d) =>
@@ -121,14 +126,11 @@ export default function GroupedBarChart({
         .join("rect")
         .attr("x", (d) => x1(d.key) ?? 0)
         .attr("width", x1.bandwidth())
-        .attr("y", innerH)
-        .attr("height", 0)
         .attr("rx", 3)
         .attr("fill", (d) => d.color)
         .style("cursor", onBarClick ? "pointer" : "default")
+        .style("transition", animate ? "y 0.5s ease, height 0.5s ease" : "none")
         .on("click", (_e, d) => onBarClick?.(d.label, d.key))
-        .transition()
-        .duration(550)
         .attr("y", (d) => y(d.value))
         .attr("height", (d) => innerH - y(d.value));
 
@@ -148,16 +150,18 @@ export default function GroupedBarChart({
         .attr("text-anchor", "middle")
         .style("font-size", "11px")
         .style("font-weight", "600")
-        .style("opacity", 0)
-        .text((d) => (d.value > 0 ? d.value : ""))
-        .transition()
-        .delay(400)
-        .duration(300)
-        .style("opacity", 1);
+        .text((d) => (d.value > 0 ? d.value : ""));
     };
 
-    render();
-    const ro = new ResizeObserver(render);
+    lastWidth = containerRef.current.clientWidth;
+    render(true);
+
+    const ro = new ResizeObserver(() => {
+      const w = containerRef.current?.clientWidth ?? 0;
+      if (w === lastWidth) return; // ignore observer fires that don't change width
+      lastWidth = w;
+      render(false);
+    });
     ro.observe(containerRef.current);
     return () => ro.disconnect();
   }, [data, series, height, onBarClick]);

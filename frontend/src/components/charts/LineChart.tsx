@@ -16,6 +16,8 @@ interface Props {
   yMax?: number;
   ySuffix?: string;
   height?: number;
+  /** Label drawn above the projected (estimated) span. */
+  forecastLabel?: string;
 }
 
 /**
@@ -29,6 +31,7 @@ export default function LineChart({
   yMax,
   ySuffix = "",
   height = 320,
+  forecastLabel = "AI-прогноз",
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -81,7 +84,7 @@ export default function LineChart({
           .attr("text-anchor", "end")
           .style("font-size", "10px")
           .style("fill", "#7a869a")
-          .text("AI-прогноз");
+          .text(forecastLabel);
       }
 
       // gridlines
@@ -154,7 +157,7 @@ export default function LineChart({
     const ro = new ResizeObserver(render);
     ro.observe(containerRef.current);
     return () => ro.disconnect();
-  }, [data, color, yMax, ySuffix, height]);
+  }, [data, color, yMax, ySuffix, height, forecastLabel]);
 
   return (
     <div ref={containerRef} style={{ width: "100%" }}>

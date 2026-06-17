@@ -17,11 +17,12 @@ import {
 import DownloadIcon from "@mui/icons-material/Download";
 import ImageIcon from "@mui/icons-material/Image";
 import { exportChart, type ExportFormat } from "@/lib/exportChart";
+import { useTranslation } from "@/i18n/I18nProvider";
 
-const FORMATS: { format: ExportFormat; label: string }[] = [
-  { format: "png", label: "PNG (растрове зображення)" },
-  { format: "jpeg", label: "JPEG (растрове зображення)" },
-  { format: "svg", label: "SVG (векторне зображення)" },
+const FORMAT_KEYS: { format: ExportFormat; labelKey: string }[] = [
+  { format: "png", labelKey: "charts.formatPng" },
+  { format: "jpeg", labelKey: "charts.formatJpeg" },
+  { format: "svg", labelKey: "charts.formatSvg" },
 ];
 
 /**
@@ -43,18 +44,19 @@ export default function ChartFrame({
   const bodyRef = useRef<HTMLDivElement>(null);
   const [anchor, setAnchor] = useState<null | HTMLElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   const handleExport = async (format: ExportFormat) => {
     setAnchor(null);
     const svg = bodyRef.current?.querySelector("svg");
     if (!svg) {
-      setError("Не вдалося знайти діаграму для експорту.");
+      setError(t("charts.exportNotFound"));
       return;
     }
     try {
       await exportChart(svg as SVGSVGElement, filename, format);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Помилка експорту");
+      setError(e instanceof Error ? e.message : t("charts.exportError"));
     }
   };
 
@@ -64,7 +66,7 @@ export default function ChartFrame({
         title={title}
         subheader={subheader}
         action={
-          <Tooltip title="Зберегти як зображення">
+          <Tooltip title={t("charts.export")}>
             <IconButton onClick={(e) => setAnchor(e.currentTarget)} aria-label="export chart">
               <DownloadIcon />
             </IconButton>
@@ -76,12 +78,12 @@ export default function ChartFrame({
       </CardContent>
 
       <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
-        {FORMATS.map((f) => (
+        {FORMAT_KEYS.map((f) => (
           <MenuItem key={f.format} onClick={() => handleExport(f.format)}>
             <ListItemIcon>
               <ImageIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>{f.label}</ListItemText>
+            <ListItemText>{t(f.labelKey)}</ListItemText>
           </MenuItem>
         ))}
       </Menu>

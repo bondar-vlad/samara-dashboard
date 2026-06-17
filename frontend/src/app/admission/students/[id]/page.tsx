@@ -11,11 +11,11 @@ import {
   Button,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import DirectionAnalysis from "@/components/admission/DirectionAnalysis";
+import FourthSubjectAnalysis from "@/components/admission/FourthSubjectAnalysis";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslation } from "@/i18n/I18nProvider";
 
-export default function StudentDirectionPage() {
+export default function StudentFourthSubjectPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
   const { t } = useTranslation();
@@ -33,14 +33,14 @@ export default function StudentDirectionPage() {
             {t("header.backHome")}
           </Button>
           <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
-            {t("header.directionAnalysis")}
+            {t("header.fourthSubjectAnalysis")}
           </Typography>
           <LanguageSwitcher />
         </Toolbar>
       </AppBar>
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        {id && <DirectionAnalysis studentId={id} />}
+        {id && <FourthSubjectAnalysis studentId={id} />}
       </Container>
     </Box>
   );

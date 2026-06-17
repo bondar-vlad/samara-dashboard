@@ -54,6 +54,58 @@ export function useUniversityFit(id: string | null) {
   });
 }
 
+// ─── NMT fourth-subject (admission) ──────────────────────────────────────────
+
+export function useNmtSubjects() {
+  return useQuery({
+    queryKey: ["nmt-subjects"],
+    queryFn: api.getNmtSubjects,
+    staleTime: Infinity, // reference data
+  });
+}
+
+export function useSchoolFourthSubjects(schoolId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["fourth-subject-school", schoolId],
+    queryFn: () => api.getSchoolFourthSubjects(schoolId as string),
+    enabled: !!schoolId,
+  });
+}
+
+export function useStudentFourthSubject(id: string | null) {
+  return useQuery({
+    queryKey: ["fourth-subject", id],
+    queryFn: () => api.getStudentFourthSubject(id as string),
+    enabled: !!id,
+  });
+}
+
+// ─── Admission direction (NMT-based profile) ─────────────────────────────────
+
+export function useAdmissionDirections() {
+  return useQuery({
+    queryKey: ["admission-directions"],
+    queryFn: api.getAdmissionDirections,
+    staleTime: Infinity, // reference data
+  });
+}
+
+export function useSchoolDirections(schoolId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["direction-school", schoolId],
+    queryFn: () => api.getSchoolDirections(schoolId as string),
+    enabled: !!schoolId,
+  });
+}
+
+export function useStudentDirection(id: string | null) {
+  return useQuery({
+    queryKey: ["direction", id],
+    queryFn: () => api.getStudentDirection(id as string),
+    enabled: !!id,
+  });
+}
+
 /** Runs analysis for a student, then refreshes everything that depends on it. */
 export function useRunAnalysis() {
   const qc = useQueryClient();
