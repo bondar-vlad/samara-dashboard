@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="ChildRights.Education.Infrastructure.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\ChildRights.BuildingBlocks.Infrastructure\ChildRights.BuildingBlocks.Infrastructure.csproj" />
     <ProjectReference Include="..\ChildRights.Education.Application\ChildRights.Education.Application.csproj" />
   </ItemGroup>

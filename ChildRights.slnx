@@ -36,5 +36,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ChildRights.Analysis.Domain.Tests/ChildRights.Analysis.Domain.Tests.csproj" />
+    <Project Path="tests/ChildRights.Education.Infrastructure.Tests/ChildRights.Education.Infrastructure.Tests.csproj" />
   </Folder>
 </Solution>

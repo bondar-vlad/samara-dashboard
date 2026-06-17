@@ -315,5 +315,11 @@ docs/                       # ARCHITECTURE.md, API.md
   For production, switch to **EF Core migrations** and externalise secrets.
 - Authentication/authorization is not wired up yet — add JWT bearer auth at the gateway
   and per-service for a real deployment.
-- The seed data is deterministic so the demo always produces the same red flags and
-  recommendations.
+- The seed data is **deterministic and large**: 6 institutions of different types across
+  several communities/regions, ~108 pupils each (~640 total), with topic-level grades,
+  attendance and self-reported desired profiles. ~22% of pupils desire a different cluster
+  than their grades suggest (profile-mismatch flags) and ~12% have elevated absences
+  (attendance flags), so the dashboards are populated out of the box. Four named pupils keep
+  fixed scenarios for `scripts/demo.ps1`. The dataset is verified by
+  `tests/ChildRights.Education.Infrastructure.Tests` (≥5 schools, ≥100 pupils each).
+
