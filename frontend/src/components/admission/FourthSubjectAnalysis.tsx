@@ -18,6 +18,7 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 import { useStudentFourthSubject } from "@/lib/hooks";
 import { BLUE, ORANGE, YELLOW, GREEN } from "@/theme/colors";
+import { useTranslation } from "@/i18n/I18nProvider";
 
 function ChoiceBox({
   title,
@@ -60,6 +61,7 @@ function ChoiceBox({
 }
 
 export default function FourthSubjectAnalysis({ studentId }: { studentId: string }) {
+  const { t } = useTranslation();
   const { data, isLoading, isError } = useStudentFourthSubject(studentId);
 
   const maxScore = 12;
@@ -68,8 +70,8 @@ export default function FourthSubjectAnalysis({ studentId }: { studentId: string
   return (
     <Card variant="outlined">
       <CardHeader
-        title="Четвертий предмет НМТ"
-        subheader="Предмет за вибором учня проти рекомендації системи на основі оцінок"
+        title={t("fourthSubject.cardTitle")}
+        subheader={t("fourthSubject.cardSub")}
       />
       <CardContent>
         {isLoading ? (
@@ -77,20 +79,20 @@ export default function FourthSubjectAnalysis({ studentId }: { studentId: string
             <CircularProgress />
           </Box>
         ) : isError || !data ? (
-          <Alert severity="error">Не вдалося завантажити дані про четвертий предмет.</Alert>
+          <Alert severity="error">{t("fourthSubject.analysisLoadError")}</Alert>
         ) : (
           <Stack spacing={2}>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "stretch" }}>
               <ChoiceBox
-                title="Вибір учня"
-                subtitle={data.hasChoice ? "Обраний предмет" : "Ще не обрано"}
+                title={t("fourthSubject.studentChoice")}
+                subtitle={data.hasChoice ? t("fourthSubject.chosenSubject") : t("fourthSubject.notChosenYet")}
                 subject={data.chosenSubjectName}
                 accent={ORANGE}
                 highlight={mismatch}
               />
               <ChoiceBox
-                title="Рекомендація системи"
-                subtitle="За результатами навчання"
+                title={t("fourthSubject.systemRec")}
+                subtitle={t("fourthSubject.byResults")}
                 subject={data.recommendedSubjectName}
                 accent={BLUE}
                 highlight={mismatch}
@@ -124,10 +126,10 @@ export default function FourthSubjectAnalysis({ studentId }: { studentId: string
                 )}
                 <Typography variant="body2">
                   {!data.hasChoice
-                    ? "Учень ще не обрав четвертий предмет. Рекомендація системи може допомогти у виборі."
+                    ? t("fourthSubject.bannerNotChosen")
                     : mismatch
-                      ? "Вибір учня не збігається з рекомендацією системи — варто обговорити."
-                      : "Вибір учня збігається з рекомендацією системи."}
+                      ? t("fourthSubject.bannerMismatch")
+                      : t("fourthSubject.bannerMatch")}
                 </Typography>
               </Stack>
             )}
@@ -136,7 +138,7 @@ export default function FourthSubjectAnalysis({ studentId }: { studentId: string
             {data.rationale && (
               <Paper variant="outlined" sx={{ p: 2, bgcolor: "#fafafa", borderStyle: "dashed" }}>
                 <Typography variant="overline" color="text.secondary">
-                  На основі оцінок
+                  {t("fourthSubject.basedOnGrades")}
                 </Typography>
                 <Typography variant="body2" sx={{ mt: 0.5 }}>
                   {data.rationale}
@@ -149,7 +151,7 @@ export default function FourthSubjectAnalysis({ studentId }: { studentId: string
               <Box>
                 <Divider sx={{ mb: 1.5 }}>
                   <Typography variant="overline" color="text.secondary">
-                    Рейтинг предметів на вибір
+                    {t("fourthSubject.rankingTitle")}
                   </Typography>
                 </Divider>
                 <Stack spacing={1.25}>
@@ -166,7 +168,7 @@ export default function FourthSubjectAnalysis({ studentId }: { studentId: string
                             {isRec && (
                               <Chip
                                 size="small"
-                                label="рекомендовано"
+                                label={t("common.recommendedTag")}
                                 color="primary"
                                 sx={{ ml: 1, height: 18 }}
                               />
@@ -175,7 +177,7 @@ export default function FourthSubjectAnalysis({ studentId }: { studentId: string
                           <Typography variant="body2" color="text.secondary">
                             {r.score.toFixed(1)} ·{" "}
                             <Typography component="span" variant="caption" color="text.secondary">
-                              {r.evidenceCount} оцінок
+                              {t("fourthSubject.evidenceCount", { count: r.evidenceCount })}
                             </Typography>
                           </Typography>
                         </Stack>

@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
-  CardHeader,
   Box,
   Stack,
   Typography,
@@ -28,16 +27,12 @@ import GroupedBarChart, {
 } from "@/components/charts/GroupedBarChart";
 import { useStudents, useNmtSubjects, useSchoolFourthSubjects } from "@/lib/hooks";
 import { SERIES_DESIRED, SERIES_RECOMMENDED, YELLOW, GREEN } from "@/theme/colors";
+import { useTranslation } from "@/i18n/I18nProvider";
 
-const SERIES: SeriesDef[] = [
-  { key: "chosen", name: "Вибір учнів", color: SERIES_DESIRED },
-  { key: "recommended", name: "Рекомендація системи", color: SERIES_RECOMMENDED },
-];
-
-function Legend() {
+function Legend({ series }: { series: SeriesDef[] }) {
   return (
     <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", mb: 1 }} useFlexGap>
-      {SERIES.map((s) => (
+      {series.map((s) => (
         <Stack key={s.key} direction="row" spacing={0.75} sx={{ alignItems: "center" }}>
           <Box sx={{ width: 12, height: 12, borderRadius: "3px", bgcolor: s.color }} />
           <Typography variant="body2" color="text.secondary">
@@ -51,10 +46,19 @@ function Legend() {
 
 export default function FourthSubjectDashboard() {
   const router = useRouter();
+  const { t } = useTranslation();
   const students = useStudents();
   const nmt = useNmtSubjects();
   const schoolId = students.data?.[0]?.schoolId;
   const school = useSchoolFourthSubjects(schoolId);
+
+  const series: SeriesDef[] = useMemo(
+    () => [
+      { key: "chosen", name: t("common.seriesChosen"), color: SERIES_DESIRED },
+      { key: "recommended", name: t("common.seriesRecommended"), color: SERIES_RECOMMENDED },
+    ],
+    [t],
+  );
 
   const nameOf = useMemo(() => {
     const map = new Map<string, string>();
@@ -84,21 +88,21 @@ export default function FourthSubjectDashboard() {
     );
   }
   if (students.isError || school.isError) {
-    return <Alert severity="error">Не вдалося завантажити дані про четвертий предмет НМТ.</Alert>;
+    return <Alert severity="error">{t("fourthSubject.loadError")}</Alert>;
   }
 
   return (
     <Stack spacing={3}>
       <ChartFrame
-        title="Четвертий предмет НМТ: вибір учнів проти рекомендації"
-        subheader="Кількість учнів за предметом на вибір — що обрали учні та що рекомендує система"
+        title={t("fourthSubject.chartTitle")}
+        subheader={t("fourthSubject.chartSub")}
         filename="nmt-fourth-subject"
       >
-        <Legend />
+        <Legend series={series} />
         {chartData.length > 0 ? (
-          <GroupedBarChart data={chartData} series={SERIES} />
+          <GroupedBarChart data={chartData} series={series} />
         ) : (
-          <Alert severity="info">Немає даних для графіка.</Alert>
+          <Alert severity="info">{t("common.noChartData")}</Alert>
         )}
       </ChartFrame>
 
@@ -110,13 +114,13 @@ export default function FourthSubjectDashboard() {
           useFlexGap
         >
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            Учні: четвертий предмет
+            {t("fourthSubject.studentsTitle")}
           </Typography>
-          <Chip size="small" label={`Не обрали: ${notChosen}`} variant="outlined" />
-          <Chip size="small" color="warning" variant="outlined" label={`Розбіжностей: ${mismatches}`} />
+          <Chip size="small" label={t("common.notChosenCount", { count: notChosen })} variant="outlined" />
+          <Chip size="small" color="warning" variant="outlined" label={t("common.mismatchesCount", { count: mismatches })} />
         </Stack>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Натисніть на учня, щоб відкрити детальний аналіз четвертого предмета.
+          {t("fourthSubject.clickHint")}
         </Typography>
 
         <Card variant="outlined">
@@ -124,11 +128,11 @@ export default function FourthSubjectDashboard() {
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Учень</TableCell>
-                  <TableCell>Клас</TableCell>
-                  <TableCell>Вибір учня</TableCell>
-                  <TableCell>Рекомендація системи</TableCell>
-                  <TableCell align="center">Статус</TableCell>
+                  <TableCell>{t("table.student")}</TableCell>
+                  <TableCell>{t("table.class")}</TableCell>
+                  <TableCell>{t("table.choice")}</TableCell>
+                  <TableCell>{t("table.recommendation")}</TableCell>
+                  <TableCell align="center">{t("table.status")}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -147,14 +151,14 @@ export default function FourthSubjectDashboard() {
                       <TableCell>{nameOf(s.recommendedSubject)}</TableCell>
                       <TableCell align="center">
                         {!s.chosenSubject ? (
-                          <Chip size="small" label="Не обрано" variant="outlined" />
+                          <Chip size="small" label={t("table.notChosen")} variant="outlined" />
                         ) : mismatch ? (
                           <Chip
                             size="small"
                             color="warning"
                             variant="outlined"
                             icon={<WarningAmberIcon />}
-                            label="Розбіжність"
+                            label={t("table.mismatch")}
                           />
                         ) : (
                           <CheckCircleOutlineIcon sx={{ color: GREEN, fontSize: 20 }} />

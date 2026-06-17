@@ -19,6 +19,7 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 import { useStudentDirection, useAdmissionDirections } from "@/lib/hooks";
 import { BLUE, ORANGE, YELLOW, GREEN } from "@/theme/colors";
+import { useTranslation } from "@/i18n/I18nProvider";
 
 function ChoiceBox({
   title,
@@ -61,13 +62,14 @@ function ChoiceBox({
 }
 
 export default function DirectionAnalysis({ studentId }: { studentId: string }) {
+  const { t } = useTranslation();
   const { data, isLoading, isError } = useStudentDirection(studentId);
   const directions = useAdmissionDirections();
 
   const recInfo = useMemo(() => {
     if (!data?.recommendedDirectionCode) return undefined;
     return directions.data?.find((d) => d.code === data.recommendedDirectionCode);
-  }, [directions.data, data?.recommendedDirectionCode]);
+  }, [directions.data, data]);
 
   const nmtEntries = Object.entries(data?.nmtScores ?? {});
   const mismatch = !!data?.hasChoice && !data?.isMatch;
@@ -75,8 +77,8 @@ export default function DirectionAnalysis({ studentId }: { studentId: string }) 
   return (
     <Card variant="outlined">
       <CardHeader
-        title="Аналіз напряму (профілю) за НМТ"
-        subheader="Рекомендований напрям вступу рахується за балами НМТ із коефіцієнтами напряму та профільними темами"
+        title={t("direction.cardTitle")}
+        subheader={t("direction.cardSub")}
       />
       <CardContent>
         {isLoading ? (
@@ -84,20 +86,20 @@ export default function DirectionAnalysis({ studentId }: { studentId: string }) 
             <CircularProgress />
           </Box>
         ) : isError || !data ? (
-          <Alert severity="error">Не вдалося завантажити аналіз напряму.</Alert>
+          <Alert severity="error">{t("direction.analysisLoadError")}</Alert>
         ) : (
           <Stack spacing={2}>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "stretch" }}>
               <ChoiceBox
-                title="Вибір учня"
-                subtitle={data.hasChoice ? "Обраний напрям" : "Ще не обрано"}
+                title={t("direction.studentChoice")}
+                subtitle={data.hasChoice ? t("direction.chosenDirection") : t("direction.notChosenYet")}
                 value={data.desiredDirectionName}
                 accent={ORANGE}
                 highlight={mismatch}
               />
               <ChoiceBox
-                title="Рекомендація системи"
-                subtitle="За балами НМТ і темами"
+                title={t("direction.systemRec")}
+                subtitle={t("direction.byNmtAndTopics")}
                 value={data.recommendedDirectionName}
                 accent={BLUE}
                 highlight={mismatch}
@@ -126,10 +128,10 @@ export default function DirectionAnalysis({ studentId }: { studentId: string }) 
                 )}
                 <Typography variant="body2">
                   {!data.hasChoice
-                    ? "Учень ще не обрав напрям. Рекомендація за НМТ може допомогти у виборі."
+                    ? t("direction.bannerNotChosen")
                     : mismatch
-                      ? "Вибір учня не збігається з рекомендацією за НМТ — варто обговорити."
-                      : "Вибір учня збігається з рекомендацією за НМТ."}
+                      ? t("direction.bannerMismatch")
+                      : t("direction.bannerMatch")}
                 </Typography>
               </Stack>
             )}
@@ -138,7 +140,7 @@ export default function DirectionAnalysis({ studentId }: { studentId: string }) 
             {nmtEntries.length > 0 && (
               <Box>
                 <Typography variant="overline" color="text.secondary">
-                  Бали НМТ
+                  {t("direction.nmtScores")}
                 </Typography>
                 <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", mt: 0.5 }} useFlexGap>
                   {nmtEntries.map(([subj, score]) => (
@@ -152,7 +154,7 @@ export default function DirectionAnalysis({ studentId }: { studentId: string }) 
             {data.rationale && (
               <Paper variant="outlined" sx={{ p: 2, bgcolor: "#fafafa", borderStyle: "dashed" }}>
                 <Typography variant="overline" color="text.secondary">
-                  Як рахувалось
+                  {t("direction.howComputed")}
                 </Typography>
                 <Typography variant="body2" sx={{ mt: 0.5 }}>
                   {data.rationale}
@@ -166,13 +168,13 @@ export default function DirectionAnalysis({ studentId }: { studentId: string }) 
                 <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                   {recInfo.name}{" "}
                   <Typography component="span" variant="caption" color="text.secondary">
-                    · профіль {recInfo.relatedClusterName}
+                    {t("direction.profileLabel", { name: recInfo.relatedClusterName })}
                   </Typography>
                 </Typography>
                 {recInfo.keySubjects.length > 0 && (
                   <Box sx={{ mt: 1 }}>
                     <Typography variant="caption" color="text.secondary">
-                      Профільні предмети:{" "}
+                      {t("direction.keySubjects")}
                     </Typography>
                     <Typography variant="caption">{recInfo.keySubjects.join(", ")}</Typography>
                   </Box>
@@ -192,7 +194,7 @@ export default function DirectionAnalysis({ studentId }: { studentId: string }) 
               <Box>
                 <Divider sx={{ mb: 1.5 }}>
                   <Typography variant="overline" color="text.secondary">
-                    Рейтинг напрямів
+                    {t("direction.rankingTitle")}
                   </Typography>
                 </Divider>
                 <Stack spacing={1.25}>
@@ -207,13 +209,13 @@ export default function DirectionAnalysis({ studentId }: { studentId: string }) 
                           <Typography variant="body2" sx={{ fontWeight: isRec ? 700 : 500 }}>
                             {r.directionName}
                             {isRec && (
-                              <Chip size="small" label="рекомендовано" color="primary" sx={{ ml: 1, height: 18 }} />
+                              <Chip size="small" label={t("common.recommendedTag")} color="primary" sx={{ ml: 1, height: 18 }} />
                             )}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
                             {(r.combinedScore * 100).toFixed(0)}%
-                            {r.competitiveScore != null && ` · НМТ ${r.competitiveScore.toFixed(0)}`}
-                            {" · теми "}
+                            {r.competitiveScore != null && ` · ${t("direction.nmtShort")} ${r.competitiveScore.toFixed(0)}`}
+                            {` · ${t("direction.topicsShort")} `}
                             {r.topicFit.toFixed(1)}
                           </Typography>
                         </Stack>

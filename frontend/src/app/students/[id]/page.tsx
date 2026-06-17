@@ -12,10 +12,13 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DirectionAnalysis from "@/components/admission/DirectionAnalysis";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useTranslation } from "@/i18n/I18nProvider";
 
 export default function StudentDirectionPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
+  const { t } = useTranslation();
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
@@ -27,11 +30,12 @@ export default function StudentDirectionPage() {
             startIcon={<ArrowBackIcon />}
             sx={{ color: "#fff", mr: 2 }}
           >
-            На головну
+            {t("header.backHome")}
           </Button>
           <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
-            Аналіз напряму (профілю)
+            {t("header.directionAnalysis")}
           </Typography>
+          <LanguageSwitcher />
         </Toolbar>
       </AppBar>
 

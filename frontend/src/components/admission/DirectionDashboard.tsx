@@ -27,16 +27,12 @@ import GroupedBarChart, {
 } from "@/components/charts/GroupedBarChart";
 import { useStudents, useAdmissionDirections, useSchoolDirections } from "@/lib/hooks";
 import { SERIES_DESIRED, SERIES_RECOMMENDED, YELLOW, GREEN } from "@/theme/colors";
+import { useTranslation } from "@/i18n/I18nProvider";
 
-const SERIES: SeriesDef[] = [
-  { key: "chosen", name: "Вибір учнів", color: SERIES_DESIRED },
-  { key: "recommended", name: "Рекомендація системи", color: SERIES_RECOMMENDED },
-];
-
-function Legend() {
+function Legend({ series }: { series: SeriesDef[] }) {
   return (
     <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", mb: 1 }} useFlexGap>
-      {SERIES.map((s) => (
+      {series.map((s) => (
         <Stack key={s.key} direction="row" spacing={0.75} sx={{ alignItems: "center" }}>
           <Box sx={{ width: 12, height: 12, borderRadius: "3px", bgcolor: s.color }} />
           <Typography variant="body2" color="text.secondary">
@@ -50,10 +46,19 @@ function Legend() {
 
 export default function DirectionDashboard() {
   const router = useRouter();
+  const { t } = useTranslation();
   const students = useStudents();
   const directions = useAdmissionDirections();
   const schoolId = students.data?.[0]?.schoolId;
   const school = useSchoolDirections(schoolId);
+
+  const series: SeriesDef[] = useMemo(
+    () => [
+      { key: "chosen", name: t("common.seriesChosen"), color: SERIES_DESIRED },
+      { key: "recommended", name: t("common.seriesRecommended"), color: SERIES_RECOMMENDED },
+    ],
+    [t],
+  );
 
   const nameOf = useMemo(() => {
     const map = new Map<string, string>();
@@ -82,21 +87,21 @@ export default function DirectionDashboard() {
     );
   }
   if (students.isError || school.isError) {
-    return <Alert severity="error">Не вдалося завантажити дані про напрям (профіль).</Alert>;
+    return <Alert severity="error">{t("direction.loadError")}</Alert>;
   }
 
   return (
     <Stack spacing={3}>
       <ChartFrame
-        title="Вибір напряму вищої освіти"
-        subheader="Кількість учнів за напрямом вступу — вибір учнів проти рекомендації системи"
+        title={t("direction.chartTitle")}
+        subheader={t("direction.chartSub")}
         filename="admission-direction"
       >
-        <Legend />
+        <Legend series={series} />
         {chartData.length > 0 ? (
-          <GroupedBarChart data={chartData} series={SERIES} />
+          <GroupedBarChart data={chartData} series={series} />
         ) : (
-          <Alert severity="info">Немає даних для графіка.</Alert>
+          <Alert severity="info">{t("common.noChartData")}</Alert>
         )}
       </ChartFrame>
 
@@ -108,13 +113,13 @@ export default function DirectionDashboard() {
           useFlexGap
         >
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            Учні за напрямом
+            {t("direction.studentsTitle")}
           </Typography>
-          <Chip size="small" label={`Не обрали: ${notChosen}`} variant="outlined" />
-          <Chip size="small" color="warning" variant="outlined" label={`Розбіжностей: ${mismatches}`} />
+          <Chip size="small" label={t("common.notChosenCount", { count: notChosen })} variant="outlined" />
+          <Chip size="small" color="warning" variant="outlined" label={t("common.mismatchesCount", { count: mismatches })} />
         </Stack>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Натисніть на учня, щоб відкрити детальний аналіз.
+          {t("direction.clickHint")}
         </Typography>
 
         <Card variant="outlined">
@@ -122,11 +127,11 @@ export default function DirectionDashboard() {
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Учень</TableCell>
-                  <TableCell>Клас</TableCell>
-                  <TableCell>Вибір учня</TableCell>
-                  <TableCell>Рекомендація системи</TableCell>
-                  <TableCell align="center">Статус</TableCell>
+                  <TableCell>{t("table.student")}</TableCell>
+                  <TableCell>{t("table.class")}</TableCell>
+                  <TableCell>{t("table.choice")}</TableCell>
+                  <TableCell>{t("table.recommendation")}</TableCell>
+                  <TableCell align="center">{t("table.status")}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -147,14 +152,14 @@ export default function DirectionDashboard() {
                       <TableCell>{nameOf(s.recommendedDirectionCode)}</TableCell>
                       <TableCell align="center">
                         {!s.desiredDirectionCode ? (
-                          <Chip size="small" label="Не обрано" variant="outlined" />
+                          <Chip size="small" label={t("table.notChosen")} variant="outlined" />
                         ) : mismatch ? (
                           <Chip
                             size="small"
                             color="warning"
                             variant="outlined"
                             icon={<WarningAmberIcon />}
-                            label="Розбіжність"
+                            label={t("table.mismatch")}
                           />
                         ) : (
                           <CheckCircleOutlineIcon sx={{ color: GREEN, fontSize: 20 }} />
