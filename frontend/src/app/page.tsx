@@ -1,9 +1,10 @@
 "use client";
 
 import NextLink from "next/link";
-import { AppBar, Toolbar, Typography, Container, Box, Button } from "@mui/material";
+import { AppBar, Toolbar, Typography, Container, Box, Button, Stack } from "@mui/material";
 import InsightsIcon from "@mui/icons-material/Insights";
-import ProfileDashboard from "@/components/dashboard/ProfileDashboard";
+import DirectionDashboard from "@/components/admission/DirectionDashboard";
+import FourthSubjectDashboard from "@/components/admission/FourthSubjectDashboard";
 
 export default function HomePage() {
   return (
@@ -28,7 +29,12 @@ export default function HomePage() {
       </AppBar>
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <ProfileDashboard />
+        <Stack spacing={5}>
+          {/* Widget 1: профіль (напрям) за НМТ */}
+          <DirectionDashboard />
+          {/* Widget 2: 4-й предмет НМТ */}
+          <FourthSubjectDashboard />
+        </Stack>
       </Container>
     </Box>
   );

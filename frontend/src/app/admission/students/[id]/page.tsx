@@ -11,9 +11,9 @@ import {
   Button,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import DirectionAnalysis from "@/components/admission/DirectionAnalysis";
+import FourthSubjectAnalysis from "@/components/admission/FourthSubjectAnalysis";
 
-export default function StudentDirectionPage() {
+export default function StudentFourthSubjectPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
 
@@ -30,13 +30,13 @@ export default function StudentDirectionPage() {
             На головну
           </Button>
           <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
-            Аналіз напряму (профілю)
+            Аналіз четвертого предмета НМТ
           </Typography>
         </Toolbar>
       </AppBar>
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        {id && <DirectionAnalysis studentId={id} />}
+        {id && <FourthSubjectAnalysis studentId={id} />}
       </Container>
     </Box>
   );
