@@ -11,6 +11,7 @@ import {
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 import type { ProfileChoice } from "@/lib/types";
+import { BLUE, ORANGE, YELLOW, GREEN } from "@/theme/colors";
 
 function ProfileColumn({
   title,
@@ -94,7 +95,7 @@ export default function ProfileColumns({ choice }: { choice: ProfileChoice }) {
           subtitle="Бажані профілі, обрані учнем"
           clusterName={choice.desiredClusterName}
           profiles={choice.desiredProfiles}
-          accent="#3b6ea5"
+          accent={ORANGE}
           highlight={mismatch}
         />
         <ProfileColumn
@@ -106,7 +107,7 @@ export default function ProfileColumns({ choice }: { choice: ProfileChoice }) {
           }
           clusterName={choice.recommendedClusterName}
           profiles={choice.recommendedProfiles}
-          accent="#0a0a0a"
+          accent={BLUE}
           highlight={mismatch}
         />
       </Stack>
@@ -120,15 +121,15 @@ export default function ProfileColumns({ choice }: { choice: ProfileChoice }) {
             mt: 2,
             p: 1.5,
             borderRadius: 2,
-            bgcolor: mismatch ? "#c778000d" : "#2e7d540d",
+            bgcolor: mismatch ? `${YELLOW}14` : `${GREEN}14`,
             border: 1,
-            borderColor: mismatch ? "#c77800" : "#2e7d54",
+            borderColor: mismatch ? YELLOW : GREEN,
           }}
         >
           {mismatch ? (
-            <WarningAmberIcon sx={{ color: "#c77800" }} />
+            <WarningAmberIcon sx={{ color: YELLOW }} />
           ) : (
-            <CheckCircleOutlineIcon sx={{ color: "#2e7d54" }} />
+            <CheckCircleOutlineIcon sx={{ color: GREEN }} />
           )}
           <Typography variant="body2">
             {mismatch
