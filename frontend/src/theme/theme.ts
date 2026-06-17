@@ -1,55 +1,118 @@
 "use client";
 
 import { createTheme } from "@mui/material/styles";
+import {
+  BLUE,
+  BLUE_LIGHT,
+  BLUE_DARK,
+  ORANGE,
+  ORANGE_LIGHT,
+  ORANGE_DARK,
+  YELLOW,
+  GREEN,
+  RED,
+  TEXT_PRIMARY,
+  TEXT_SECONDARY,
+  BG_DEFAULT,
+  BORDER,
+  CARD_SHADOW,
+} from "./colors";
 
 /**
- * App theme.
- * - Primary is black, as requested.
- * - Secondary / other accents are nudged off the MUI defaults so the UI doesn't
- *   look like stock Material, while staying close enough to feel familiar.
+ * App theme — blue/orange "Rocket"-style dashboard look:
+ * vivid royal-blue primary, orange secondary, soft-shadowed rounded white
+ * cards on a light cool-gray background, pill-shaped buttons.
  */
 const theme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: "#0a0a0a",
-      light: "#2b2b2b",
-      dark: "#000000",
+      main: BLUE,
+      light: BLUE_LIGHT,
+      dark: BLUE_DARK,
       contrastText: "#ffffff",
     },
     secondary: {
-      // default MUI secondary is #9c27b0 (purple); shifted to a muted teal-slate
-      main: "#3f7d7b",
-      light: "#6aa9a6",
-      dark: "#2b5654",
+      main: ORANGE,
+      light: ORANGE_LIGHT,
+      dark: ORANGE_DARK,
       contrastText: "#ffffff",
     },
-    // nudged a touch off the defaults
-    error: { main: "#c62828" },
-    warning: { main: "#c77800" },
-    info: { main: "#3b6ea5" },
-    success: { main: "#2e7d54" },
+    warning: { main: YELLOW, contrastText: "#ffffff" },
+    success: { main: GREEN, contrastText: "#ffffff" },
+    error: { main: RED, contrastText: "#ffffff" },
+    info: { main: "#4dabf7", contrastText: "#ffffff" },
     background: {
-      default: "#fafafa",
+      default: BG_DEFAULT,
       paper: "#ffffff",
     },
+    text: {
+      primary: TEXT_PRIMARY,
+      secondary: TEXT_SECONDARY,
+    },
+    divider: BORDER,
   },
   shape: {
-    borderRadius: 10,
+    borderRadius: 14,
   },
   typography: {
     fontFamily: "var(--font-geist-sans), system-ui, Arial, sans-serif",
     h1: { fontWeight: 700 },
     h2: { fontWeight: 700 },
-    h3: { fontWeight: 600 },
+    h3: { fontWeight: 700 },
+    h4: { fontWeight: 700 },
+    h5: { fontWeight: 700 },
+    h6: { fontWeight: 700 },
     button: { textTransform: "none", fontWeight: 600 },
   },
   components: {
+    MuiCard: {
+      defaultProps: { elevation: 0 },
+      styleOverrides: {
+        root: {
+          borderRadius: 16,
+          border: `1px solid ${BORDER}`,
+          boxShadow: CARD_SHADOW,
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        outlined: { borderColor: BORDER },
+      },
+    },
     MuiButton: {
       defaultProps: { disableElevation: true },
+      styleOverrides: {
+        root: { borderRadius: 999, paddingInline: 18 },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: { borderRadius: 8, fontWeight: 600 },
+      },
     },
     MuiAppBar: {
-      defaultProps: { color: "primary" },
+      defaultProps: { color: "primary", elevation: 0 },
+      styleOverrides: {
+        root: { boxShadow: "0 2px 16px rgba(58, 87, 232, 0.18)" },
+      },
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        head: {
+          color: TEXT_SECONDARY,
+          fontWeight: 700,
+          fontSize: "0.75rem",
+          textTransform: "uppercase",
+          letterSpacing: "0.04em",
+        },
+      },
+    },
+    MuiLinearProgress: {
+      styleOverrides: {
+        root: { borderRadius: 999 },
+      },
     },
   },
 });
