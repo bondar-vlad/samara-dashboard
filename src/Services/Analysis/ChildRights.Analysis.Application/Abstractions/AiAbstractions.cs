@@ -1,3 +1,6 @@
+using ChildRights.BuildingBlocks.Domain.SharedKernel;
+using ChildRights.Analysis.Domain.Entities;
+using ChildRights.Analysis.Domain.Enums;
 using ChildRights.Analysis.Domain.Rules;
 
 namespace ChildRights.Analysis.Application.Abstractions;
@@ -23,8 +26,25 @@ public interface IAiAnalysisProviderFactory
     IAiAnalysisProvider Resolve(string? modelName = null);
 }
 
-/// <summary>Input to an analysis model — a single pupil snapshot.</summary>
-public sealed record AnalysisRequest(StudentSnapshot Snapshot);
+/// <summary>
+/// The pupil's admission inputs, supplied only for admission goals (4th НМТ subject and
+/// direction). Kept off the profile/risk goals so each analysis sees only what it needs.
+/// </summary>
+public sealed record AdmissionInputs(
+    IReadOnlyDictionary<NmtSubject, int> NmtScores,
+    NmtSubject? ChosenFourthSubject,
+    string? DesiredDirectionCode,
+    IReadOnlyList<AdmissionDirection> Directions);
+
+/// <summary>
+/// Input to an analysis model: a single pupil snapshot plus the <see cref="AnalysisGoal"/>
+/// that focuses the analysis on one concrete case. <see cref="Admission"/> is populated only
+/// for admission goals.
+/// </summary>
+public sealed record AnalysisRequest(
+    StudentSnapshot Snapshot,
+    AnalysisGoal Goal = AnalysisGoal.StudentRisk,
+    AdmissionInputs? Admission = null);
 
 /// <summary>Output of an analysis model: the findings plus the model identity.</summary>
 public sealed record AnalysisResult(

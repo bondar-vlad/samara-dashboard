@@ -38,6 +38,36 @@ public static class StudentRiskRules
         return new RuleEvaluation(flags, recommendations);
     }
 
+    /// <summary>
+    /// The <see cref="AnalysisGoal.StudentRisk"/> case in isolation: attendance and academic
+    /// red flags only. Applies to every pupil regardless of grade.
+    /// </summary>
+    public static RuleEvaluation EvaluateRisk(StudentSnapshot snapshot)
+    {
+        var flags = new List<FlagFinding>();
+        EvaluateAttendance(snapshot, flags);
+        EvaluateAcademicRisk(snapshot, flags);
+        return new RuleEvaluation(flags, []);
+    }
+
+    /// <summary>
+    /// The <see cref="AnalysisGoal.ProfileChoice"/> case in isolation: the profile/cluster
+    /// recommendation and the desired-vs-recommended mismatch flag. Skipped for graduating
+    /// pupils (11+), who are entering university rather than choosing a school profile.
+    /// </summary>
+    public static RuleEvaluation EvaluateProfile(StudentSnapshot snapshot)
+    {
+        var flags = new List<FlagFinding>();
+        var recommendations = new List<RecommendationFinding>();
+
+        if (snapshot.GradeLevel < GraduatingGradeLevel)
+        {
+            EvaluateProfiling(snapshot, flags, recommendations);
+        }
+
+        return new RuleEvaluation(flags, recommendations);
+    }
+
     private static void EvaluateAttendance(StudentSnapshot snapshot, List<FlagFinding> flags)
     {
         var severity = snapshot.UnexcusedAbsences switch

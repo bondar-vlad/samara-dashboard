@@ -41,6 +41,26 @@ public enum AnalysisKind
     All = 2
 }
 
+/// <summary>
+/// A single, focused analysis goal. Each goal is a distinct "case" with its own concern,
+/// its own AI instruction (system prompt) and its own red flags. They are evaluated
+/// independently so each can later become its own model without touching callers.
+/// </summary>
+public enum AnalysisGoal
+{
+    /// <summary>Concrete risk monitoring: attendance and academic-performance red flags.</summary>
+    StudentRisk = 0,
+
+    /// <summary>Grade ≤10: which specialisation profile/cluster to choose.</summary>
+    ProfileChoice = 1,
+
+    /// <summary>Grade 11+: which 4th НМТ subject to take.</summary>
+    NmtFourthSubject = 2,
+
+    /// <summary>Grade 11+: which admission direction (спеціальність напрям) to enter.</summary>
+    AdmissionDirection = 3
+}
+
 /// <summary>Lifecycle of a red flag.</summary>
 public enum FlagStatus
 {

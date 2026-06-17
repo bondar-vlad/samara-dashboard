@@ -29,6 +29,32 @@ public static class AdmissionRules
         return new RuleEvaluation(flags, recommendations);
     }
 
+    /// <summary>The <see cref="Enums.AnalysisGoal.NmtFourthSubject"/> case in isolation.</summary>
+    public static RuleEvaluation EvaluateFourthSubjectGoal(
+        IReadOnlyDictionary<string, double> subjectAverages,
+        IReadOnlyList<TopicScore> topicAverages,
+        NmtSubject? chosenFourthSubject)
+    {
+        var flags = new List<FlagFinding>();
+        var recommendations = new List<RecommendationFinding>();
+        EvaluateFourthSubject(subjectAverages, topicAverages, chosenFourthSubject, flags, recommendations);
+        return new RuleEvaluation(flags, recommendations);
+    }
+
+    /// <summary>The <see cref="Enums.AnalysisGoal.AdmissionDirection"/> case in isolation.</summary>
+    public static RuleEvaluation EvaluateDirectionGoal(
+        IReadOnlyDictionary<string, double> subjectAverages,
+        IReadOnlyList<TopicScore> topicAverages,
+        IReadOnlyDictionary<NmtSubject, int> nmtScores,
+        string? desiredDirectionCode,
+        IReadOnlyCollection<AdmissionDirection> directions)
+    {
+        var flags = new List<FlagFinding>();
+        var recommendations = new List<RecommendationFinding>();
+        EvaluateDirection(subjectAverages, topicAverages, nmtScores, desiredDirectionCode, directions, flags, recommendations);
+        return new RuleEvaluation(flags, recommendations);
+    }
+
     private static void EvaluateFourthSubject(
         IReadOnlyDictionary<string, double> subjectAverages,
         IReadOnlyList<TopicScore> topicAverages,

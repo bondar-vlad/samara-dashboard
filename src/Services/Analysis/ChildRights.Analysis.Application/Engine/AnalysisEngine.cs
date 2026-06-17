@@ -3,7 +3,6 @@ using ChildRights.BuildingBlocks.Domain.SharedKernel;
 using ChildRights.Contracts.Analysis;
 using ChildRights.Analysis.Application.Abstractions;
 using ChildRights.Analysis.Application.Common;
-using ChildRights.Analysis.Domain.Admission;
 using ChildRights.Analysis.Domain.Entities;
 using ChildRights.Analysis.Domain.Enums;
 using ChildRights.Analysis.Domain.Rules;
@@ -83,34 +82,26 @@ internal sealed class AnalysisEngine(
                 Guid.NewGuid(), AnalysisScope.Student, studentId, profile.FullName,
                 r.Kind, r.Title, r.Summary, r.Rationale, r.Confidence, provider.ModelName, clock.UtcNow);
 
-            // Pass 1 — profile-education analysis (the original behaviour, the default).
-            if (effectiveKind is AnalysisKind.Profile or AnalysisKind.All)
+            // Each goal is its own focused analysis with its own AI instruction and red flags.
+            // The pupil's stage decides which goals apply (ResolveGoals); the admission goals
+            // additionally receive the pupil's НМТ inputs and the direction catalogue.
+            var goals = ResolveGoals(effectiveKind);
+            var admissionInputs = await BuildAdmissionInputsAsync(studentId, goals, cancellationToken);
+
+            foreach (var goal in goals)
             {
-                profileResult = await provider.AnalyzeAsync(new AnalysisRequest(snapshot), cancellationToken);
-                allFlags.AddRange(profileResult.Flags.Select(MapFlag));
-                allRecommendations.AddRange(profileResult.Recommendations.Select(MapRecommendation));
-                summaries.Add(profileResult.Summary);
-            }
+                var result = await provider.AnalyzeAsync(
+                    new AnalysisRequest(snapshot, goal, admissionInputs), cancellationToken);
 
-            // Pass 2 — admission analysis (4th НМТ subject + admission direction).
-            if (effectiveKind is AnalysisKind.Admission or AnalysisKind.All)
-            {
-                var choice = await context.StudentAdmissionChoices
-                    .FirstOrDefaultAsync(c => c.StudentId == studentId, cancellationToken);
-                var directions = await context.AdmissionDirections.ToListAsync(cancellationToken);
+                allFlags.AddRange(result.Flags.Select(MapFlag));
+                allRecommendations.AddRange(result.Recommendations.Select(MapRecommendation));
+                summaries.Add(result.Summary);
 
-                var admission = AdmissionRules.Evaluate(
-                    snapshot.SubjectAverages,
-                    snapshot.TopicAverages,
-                    choice?.NmtScores ?? new Dictionary<NmtSubject, int>(),
-                    choice?.ChosenFourthSubject,
-                    choice?.DesiredDirectionCode,
-                    directions);
-
-                allFlags.AddRange(admission.Flags.Select(MapFlag));
-                allRecommendations.AddRange(admission.Recommendations.Select(MapRecommendation));
-                summaries.Add(
-                    $"Вступний аналіз: {admission.Flags.Count} флаг(ів), {admission.Recommendations.Count} рекомендаці(й).");
+                // The profile-choice result feeds the insight write-back and demand analytics.
+                if (goal == AnalysisGoal.ProfileChoice)
+                {
+                    profileResult = result;
+                }
             }
 
             var summary = string.Join(" ", summaries);
@@ -257,6 +248,50 @@ internal sealed class AnalysisEngine(
 
     private static AnalysisRunResultDto EmptyResult(AnalysisRun run, string modelName) =>
         new(run.Id, modelName, run.Status.ToString(), 0, 0, run.Summary, [], []);
+
+    /// <summary>
+    /// Expands a coarse <see cref="AnalysisKind"/> into the ordered list of concrete
+    /// <see cref="AnalysisGoal"/> cases it runs. StudentRisk applies to every pupil; profile
+    /// choice is for grades ≤10, the admission goals for the graduating year (11+).
+    /// </summary>
+    private static IReadOnlyList<AnalysisGoal> ResolveGoals(AnalysisKind kind) => kind switch
+    {
+        AnalysisKind.Profile => [AnalysisGoal.StudentRisk, AnalysisGoal.ProfileChoice],
+        AnalysisKind.Admission =>
+            [AnalysisGoal.StudentRisk, AnalysisGoal.NmtFourthSubject, AnalysisGoal.AdmissionDirection],
+        AnalysisKind.All =>
+            [
+                AnalysisGoal.StudentRisk, AnalysisGoal.ProfileChoice,
+                AnalysisGoal.NmtFourthSubject, AnalysisGoal.AdmissionDirection
+            ],
+        _ => [AnalysisGoal.StudentRisk]
+    };
+
+    /// <summary>
+    /// Loads the pupil's admission inputs (НМТ scores, chosen 4th subject, desired direction)
+    /// and the direction catalogue — but only when an admission goal is actually being run, so
+    /// the profile/risk goals never touch admission data.
+    /// </summary>
+    private async Task<AdmissionInputs?> BuildAdmissionInputsAsync(
+        Guid studentId,
+        IReadOnlyList<AnalysisGoal> goals,
+        CancellationToken cancellationToken)
+    {
+        if (!goals.Any(g => g is AnalysisGoal.NmtFourthSubject or AnalysisGoal.AdmissionDirection))
+        {
+            return null;
+        }
+
+        var choice = await context.StudentAdmissionChoices
+            .FirstOrDefaultAsync(c => c.StudentId == studentId, cancellationToken);
+        var directions = await context.AdmissionDirections.ToListAsync(cancellationToken);
+
+        return new AdmissionInputs(
+            choice?.NmtScores ?? new Dictionary<NmtSubject, int>(),
+            choice?.ChosenFourthSubject,
+            choice?.DesiredDirectionCode,
+            directions);
+    }
 
     /// <summary>
     /// Resolves the analysis kind. An explicit request is always respected; otherwise the

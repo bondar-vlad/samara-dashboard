@@ -51,6 +51,11 @@ e.g. `GET http://localhost:8080/education/api/students`.
 > the pupil's grade decides — grades **≤10** get the **profile** analysis (still choosing a
 > profile), grade **11+** get the **admission** analysis (graduating, entering university).
 > Pass `?kind=Profile|Admission|All` to override.
+>
+> Each `kind` expands to a set of **focused per-goal analyses** — every goal (`StudentRisk`,
+> `ProfileChoice`, `NmtFourthSubject`, `AdmissionDirection`) is run independently with its own
+> AI instruction and its own red flags (see ARCHITECTURE.md §6). Risk flags are raised for
+> every pupil regardless of `kind`.
 
 The admission analysis (`?kind=Admission` on the run endpoint) covers two widgets: the **4th
 НМТ subject** choice and the **admission direction** choice. НМТ scores and pupil choices are

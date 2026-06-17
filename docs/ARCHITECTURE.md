@@ -135,11 +135,34 @@ The Analysis service treats "the model" as a swappable strategy
 Baked-in practices:
 
 - **Pluggable models** — choose per request (`?model=`), no code change to swap.
-- **Data minimisation** — no personal identifiers are sent to the LLM prompt.
+- **Goal-focused prompting** — each analysis goal has its **own** instruction, not one
+  catch-all prompt (see below).
+- **Data minimisation** — no personal identifiers are sent to the LLM prompt, and each goal
+  sees only the facts it needs (e.g. only the admission goals receive НМТ scores).
 - **Strict output contract** — the model must return JSON, parsed defensively.
 - **Resilience** — outbound HTTP uses the standard retry/timeout/circuit-breaker handler.
-- **Graceful degradation** — any LLM failure falls back to the deterministic engine.
+- **Graceful degradation** — any LLM failure falls back to the deterministic engine for the
+  *same* goal.
 - **Auditability** — every run is persisted (`AnalysisRun`) with its trigger and model.
+
+### Per-goal analysis (`AnalysisGoal`)
+
+Red flags are looked for **per concrete case**. The platform splits analysis into four
+focused goals, each with its own system prompt, its own user prompt (only the relevant
+inputs), its own red flags and its own JSON contract — so each can later become its own
+model without touching callers:
+
+| Goal               | Stage   | Concern                                            |
+| ------------------ | ------- | -------------------------------------------------- |
+| `StudentRisk`      | all     | attendance + academic red flags                    |
+| `ProfileChoice`    | ≤ 10    | which specialisation profile/cluster to choose     |
+| `NmtFourthSubject` | 11+     | which 4th НМТ subject to take                       |
+| `AdmissionDirection` | 11+   | which admission direction (фах) to enter           |
+
+The coarse `?kind=Profile|Admission|All` knob expands to the matching set of goals
+(`Profile` → risk + profile choice; `Admission` → risk + both admission goals). Both the
+rule engine and the LLM provider route every goal independently, so the deterministic
+fallback always matches the goal that failed.
 
 ### Three execution modes
 
