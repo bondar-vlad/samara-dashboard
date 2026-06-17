@@ -44,6 +44,7 @@ import {
   METHODOLOGY,
   SOURCES,
 } from "@/lib/ukraineData";
+import { useTranslation } from "@/i18n/I18nProvider";
 
 interface StatCardProps {
   label: string;
@@ -68,20 +69,24 @@ const StatCard = ({ label, value, hint, accent }: StatCardProps) => (
   </Card>
 );
 
-const SPEND_SERIES: SeriesDef[] = [
-  { key: "spending", name: "Держвидатки на ВО, млрд грн", color: BLUE },
-  { key: "wasted", name: "З них «не за фахом», млрд грн", color: RED },
-];
-
 const EducationDemo = () => {
+  const { t } = useTranslation();
   const [showJson, setShowJson] = useState(false);
+
+  const spendSeries: SeriesDef[] = useMemo(
+    () => [
+      { key: "spending", name: t("demo.spendSeriesName"), color: BLUE },
+      { key: "wasted", name: t("demo.wastedSeriesName"), color: RED },
+    ],
+    [t],
+  );
 
   const fundingSlices: DonutSlice[] = useMemo(
     () => [
-      { label: "Бюджет", value: FUNDING_SPLIT.budgetPct, color: BLUE },
-      { label: "Контракт", value: FUNDING_SPLIT.contractPct, color: ORANGE },
+      { label: t("demo.sliceBudget"), value: FUNDING_SPLIT.budgetPct, color: BLUE },
+      { label: t("demo.sliceContract"), value: FUNDING_SPLIT.contractPct, color: ORANGE },
     ],
-    [],
+    [t],
   );
 
   const spendVsWasteData: GroupedDatum[] = useMemo(
@@ -140,13 +145,10 @@ const EducationDemo = () => {
     <Stack spacing={3}>
       <Box>
         <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>
-          Випускники вишів: робота не за фахом і ціна для держави
+          {t("demo.heroTitle")}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Демо на відкритих даних з інтернету: яка частка випускників працює не за
-          спеціальністю, скільки з них навчались за бюджетні кошти, і яку суму
-          держбюджету це орієнтовно «зʼїдає». Кожну діаграму можна зберегти як
-          PNG / JPEG / SVG (кнопка завантаження у правому куті картки).
+          {t("demo.heroSubtitle")}
         </Typography>
       </Box>
 
@@ -158,36 +160,40 @@ const EducationDemo = () => {
         }}
       >
         <StatCard
-          label="Не за фахом"
+          label={t("demo.statOffSpecLabel")}
           value={`${lastMeasuredOffSpec.value}%`}
-          hint={`оцінка ${lastMeasuredOffSpec.year} р. (діапазон ${NOT_BY_SPECIALTY_RANGE.min}–${NOT_BY_SPECIALTY_RANGE.max}%)`}
+          hint={t("demo.statOffSpecHint", {
+            year: lastMeasuredOffSpec.year,
+            min: NOT_BY_SPECIALTY_RANGE.min,
+            max: NOT_BY_SPECIALTY_RANGE.max,
+          })}
           accent={RED}
         />
         <StatCard
-          label="Навчались на бюджеті"
+          label={t("demo.statBudgetLabel")}
           value={`${FUNDING_SPLIT.budgetPct}%`}
-          hint={`частка бюджету у наборі, ${FUNDING_SPLIT.year} р.`}
+          hint={t("demo.statBudgetHint", { year: FUNDING_SPLIT.year })}
           accent={BLUE}
         />
         <StatCard
-          label="Держвидатки на ВО"
-          value={`${lastMeasuredSpend.value} млрд`}
-          hint={`держбюджет, ${lastMeasuredSpend.year} р. (грн)`}
+          label={t("demo.statSpendLabel")}
+          value={`${lastMeasuredSpend.value} ${t("demo.bnUnit")}`}
+          hint={t("demo.statSpendHint", { year: lastMeasuredSpend.year })}
           accent={GREEN}
         />
         <StatCard
-          label="«Втрачено» (прогноз)"
-          value={`~${projectedWasted.wasted} млрд`}
-          hint={`орієнтовна верхня межа, ${projectedWasted.year} р.`}
+          label={t("demo.statWastedLabel")}
+          value={`~${projectedWasted.wasted} ${t("demo.bnUnit")}`}
+          hint={t("demo.statWastedHint", { year: projectedWasted.year })}
           accent={ORANGE}
         />
       </Box>
 
       <Alert severity="info" variant="outlined">
-        Єдиної офіційної держстатистики «працюють не за фахом» немає — оцінки
-        коливаються від ~{NOT_BY_SPECIALTY_RANGE.min}% до ~{NOT_BY_SPECIALTY_RANGE.max}%.
-        Лінії-прогнози (пунктир) побудовані ШІ-екстраполяцією тренду по знайдених
-        точках і позначені як оцінка, а не факт.
+        {t("demo.infoAlert", {
+          min: NOT_BY_SPECIALTY_RANGE.min,
+          max: NOT_BY_SPECIALTY_RANGE.max,
+        })}
       </Alert>
 
       <Box
@@ -198,49 +204,65 @@ const EducationDemo = () => {
         }}
       >
         <ChartFrame
-          title="Частка випускників, що працюють не за спеціальністю"
-          subheader="Виміряні точки (суцільна) + AI-прогноз із насиченням ~85% (пунктир)"
+          title={t("demo.chartOffSpecTitle")}
+          subheader={t("demo.chartOffSpecSub")}
           filename="ukraine-off-specialty-share"
         >
-          <LineChart data={NOT_BY_SPECIALTY} color={RED} yMax={100} ySuffix="%" />
+          <LineChart
+            data={NOT_BY_SPECIALTY}
+            color={RED}
+            yMax={100}
+            ySuffix="%"
+            forecastLabel={t("charts.forecast")}
+          />
         </ChartFrame>
 
         <ChartFrame
-          title={`Бюджет проти контракту (${FUNDING_SPLIT.year})`}
+          title={t("demo.chartDonutTitle", { year: FUNDING_SPLIT.year })}
           subheader={FUNDING_SPLIT.source}
           filename="ukraine-budget-vs-contract"
         >
           <DonutChart
             data={fundingSlices}
             centerLabel={`${FUNDING_SPLIT.budgetPct}%`}
-            centerSub="на бюджеті"
+            centerSub={t("demo.donutCenterSub")}
           />
         </ChartFrame>
 
         <ChartFrame
-          title="Держвидатки на вищу освіту, млрд грн"
-          subheader="Виміряні 2017–2021 + AI-екстраполяція тренду (пунктир)"
+          title={t("demo.chartSpendTitle")}
+          subheader={t("demo.chartSpendSub")}
           filename="ukraine-he-spending"
         >
-          <LineChart data={HE_SPENDING_BN} color={BLUE} ySuffix="" />
+          <LineChart
+            data={HE_SPENDING_BN}
+            color={BLUE}
+            ySuffix=""
+            forecastLabel={t("charts.forecast")}
+          />
         </ChartFrame>
 
         <ChartFrame
-          title="Бюджетні місця / зарахування, тис."
-          subheader="Виміряні значення за роками"
+          title={t("demo.chartPlacesTitle")}
+          subheader={t("demo.chartPlacesSub")}
           filename="ukraine-budget-places"
         >
-          <LineChart data={budgetPlacesData} color={GREEN} ySuffix="" />
+          <LineChart
+            data={budgetPlacesData}
+            color={GREEN}
+            ySuffix=""
+            forecastLabel={t("charts.forecast")}
+          />
         </ChartFrame>
       </Box>
 
       <ChartFrame
-        title="Скільки держкоштів іде на тих, хто не працює за фахом"
-        subheader="Держвидатки на ВО × частка «не за фахом» (орієнтовна верхня межа; останні роки — прогноз)"
+        title={t("demo.spendVsWastedTitle")}
+        subheader={t("demo.spendVsWastedSub")}
         filename="ukraine-spending-vs-wasted"
       >
         <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", mb: 1 }} useFlexGap>
-          {SPEND_SERIES.map((s) => (
+          {spendSeries.map((s) => (
             <Stack key={s.key} direction="row" spacing={0.75} sx={{ alignItems: "center" }}>
               <Box sx={{ width: 12, height: 12, borderRadius: "3px", bgcolor: s.color }} />
               <Typography variant="body2" color="text.secondary">
@@ -249,13 +271,13 @@ const EducationDemo = () => {
             </Stack>
           ))}
         </Stack>
-        <GroupedBarChart data={spendVsWasteData} series={SPEND_SERIES} />
+        <GroupedBarChart data={spendVsWasteData} series={spendSeries} />
       </ChartFrame>
 
       <Card variant="outlined">
         <CardHeader
-          title="Методологія та джерела"
-          subheader="Як зібрано дані й побудовано прогноз"
+          title={t("demo.methodologyTitle")}
+          subheader={t("demo.methodologySubheader")}
         />
         <CardContent>
           <Typography variant="body2" sx={{ mb: 2 }}>
@@ -286,15 +308,15 @@ const EducationDemo = () => {
 
       <Card variant="outlined">
         <CardHeader
-          title="Зібрані дані (JSON)"
-          subheader="Дані, на яких побудовано всі діаграми"
+          title={t("demo.jsonTitle")}
+          subheader={t("demo.jsonSubheader")}
           action={
             <Button
               startIcon={<CodeIcon />}
               onClick={() => setShowJson((v) => !v)}
               variant="outlined"
             >
-              {showJson ? "Сховати" : "Показати"}
+              {showJson ? t("demo.jsonHide") : t("demo.jsonShow")}
             </Button>
           }
         />
@@ -325,7 +347,7 @@ const EducationDemo = () => {
         <Chip
           size="small"
           variant="outlined"
-          label="Демо · дані індикативні, не офіційна статистика"
+          label={t("demo.demoChip")}
         />
       </Box>
     </Stack>
