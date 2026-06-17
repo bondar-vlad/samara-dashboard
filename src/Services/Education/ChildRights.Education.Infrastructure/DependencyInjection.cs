@@ -1,7 +1,9 @@
 using ChildRights.BuildingBlocks.Application.Abstractions;
 using ChildRights.BuildingBlocks.Infrastructure.Persistence;
 using ChildRights.Education.Application.Abstractions;
+using ChildRights.Education.Infrastructure.Messaging;
 using ChildRights.Education.Infrastructure.Persistence;
+using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,5 +22,11 @@ public static class DependencyInjection
         services.AddScoped<IDataSeeder, EducationDataSeeder>();
 
         return services;
+    }
+
+    /// <summary>Registers the integration-event consumers with the MassTransit bus.</summary>
+    public static void AddEducationConsumers(IBusRegistrationConfigurator configurator)
+    {
+        configurator.AddConsumer<StudentProfileRecommendedConsumer>();
     }
 }

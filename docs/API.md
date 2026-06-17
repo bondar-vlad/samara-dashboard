@@ -18,11 +18,15 @@ e.g. `GET http://localhost:8080/education/api/students`.
 
 | Method | Route                               | Purpose                                       |
 | ------ | ----------------------------------- | --------------------------------------------- |
-| GET    | `/api/students`                     | List pupils (`?schoolId=`, `?classId=`).      |
-| GET    | `/api/students/{id}`                | Pupil profile: attendance + subject averages. |
+| GET    | `/api/students`                     | List pupils (`?schoolId=`, `?classId=`); includes desired/recommended cluster + mismatch flag. |
+| GET    | `/api/students/{id}`                | Pupil profile: attendance, subject **and topic** averages, and the profile-choice picture (declared/desired/recommended). |
 | POST   | `/api/students/{id}/attendance`     | Record attendance; evaluates the red-flag policy and publishes an event past threshold. |
-| POST   | `/api/students/{id}/grades`         | Record a subject grade (1–12).                |
+| POST   | `/api/students/{id}/grades`         | Record a subject grade (1–12), optionally for a curriculum `topic`. |
+| PUT    | `/api/students/{id}/desired-profiles` | Set the profiles the pupil wants (several within one cluster). |
+| GET    | `/api/schools`                      | List institutions (`?region=&community=&institutionType=`). |
+| GET    | `/api/schools/{id}`                 | Institution card: classes + offered reform profiles. |
 | GET    | `/api/schools/{id}/overview`        | School-level aggregated overview.             |
+| GET    | `/api/reference/reform`             | Reform reference: clusters, profiles and institution types (for dropdowns/validation). |
 
 ## Analysis (`5105`)
 
@@ -32,11 +36,22 @@ e.g. `GET http://localhost:8080/education/api/students`.
 | POST   | `/api/analysis/students/{studentId}/run`       | Run analysis for a pupil (`?model=`).    |
 | POST   | `/api/analysis/schools/{schoolId}/run`         | Run school-wide analysis + aggregation.  |
 | GET    | `/api/analysis/runs`                           | Recent analysis runs (audit trail).      |
+| GET    | `/api/analysis/students/{id}/university-fit`   | Ranked specialty fit + improvement advice (`?take=&cluster=`). |
+| GET    | `/api/analysis/students/{id}/university-fit/{programId}` | Gap analysis for one chosen specialty. |
+| POST   | `/api/analysis/students/{id}/program-interest/{programId}` | Record interest in a specialty (feeds demand). |
 | GET    | `/api/red-flags`                               | List red flags (`?severity=&scope=&subjectId=&status=`). |
 | POST   | `/api/red-flags/{id}/acknowledge`              | Acknowledge a red flag.                  |
 | POST   | `/api/red-flags/{id}/resolve`                  | Resolve a red flag.                      |
 | GET    | `/api/recommendations`                         | List recommendations (`?scope=&subjectId=`). |
 | GET    | `/api/dashboard/summary`                       | Dashboard KPIs.                          |
+
+## Universities (`5105`)
+
+| Method | Route                          | Purpose                                                |
+| ------ | ------------------------------ | ------------------------------------------------------ |
+| GET    | `/api/universities`            | List universities (`?region=`).                        |
+| GET    | `/api/universities/programs`   | List specialties (`?universityId=&cluster=`).          |
+| GET    | `/api/universities/demand`     | Depersonalised per-specialty demand (`?universityId=`). |
 
 ## Medical (`5103`)
 
@@ -77,4 +92,5 @@ e.g. `GET http://localhost:8080/education/api/students`.
 | `BullyingReportFiledIntegrationEvent`    | Juvenile Police  | Analysis                  |
 | `RedFlagRaisedIntegrationEvent`          | Analysis         | Notifications             |
 | `RecommendationIssuedIntegrationEvent`   | Analysis         | Notifications             |
+| `StudentProfileRecommendedIntegrationEvent` | Analysis      | Education (writes back recommended cluster/profiles) |
 | `InterAgencyReferralRequestedIntegrationEvent` | Notifications | Social Services         |

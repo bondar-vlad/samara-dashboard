@@ -47,3 +47,26 @@ public sealed record RecommendationIssuedIntegrationEvent : IntegrationEvent
 
     public required string Summary { get; init; }
 }
+
+/// <summary>
+/// Raised by the Analysis service when it recommends specialisation profiles for a pupil.
+/// Consumed by the Education service, which writes the recommendation back onto the pupil
+/// record — establishing the pupil↔recommended-profiles link. All profiles share one cluster.
+/// </summary>
+public sealed record StudentProfileRecommendedIntegrationEvent : IntegrationEvent
+{
+    public required Guid StudentId { get; init; }
+
+    /// <summary>The recommended cluster, as the <c>ProfileCluster</c> enum name.</summary>
+    public required string RecommendedCluster { get; init; }
+
+    /// <summary>The recommended profiles within the cluster, as <c>EducationProfile</c> enum names.</summary>
+    public required IReadOnlyCollection<string> RecommendedProfiles { get; init; } = [];
+
+    /// <summary>The pupil's desired cluster at analysis time, if known (enum name).</summary>
+    public string? DesiredCluster { get; init; }
+
+    public required double Confidence { get; init; }
+
+    public required bool IsMismatch { get; init; }
+}

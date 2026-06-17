@@ -43,21 +43,42 @@ internal sealed class GetStudentProfileQueryHandler(IEducationDbContext context)
             unexcused,
             AttendancePolicy.Evaluate(unexcused).ToString());
 
-        var subjectAverages = await context.Grades
+        var grades = await context.Grades
             .Where(g => g.StudentId == student.Id)
+            .ToListAsync(cancellationToken);
+
+        var subjectAverages = grades
             .GroupBy(g => g.Subject)
             .Select(g => new SubjectAverageDto(g.Key, g.Average(x => x.Value), g.Count()))
-            .ToListAsync(cancellationToken);
+            .ToList();
+
+        var topicAverages = grades
+            .Where(g => !string.IsNullOrWhiteSpace(g.Topic))
+            .GroupBy(g => new { g.Subject, g.Topic })
+            .Select(g => new TopicAverageDto(g.Key.Subject, g.Key.Topic!, g.Average(x => x.Value), g.Count()))
+            .OrderByDescending(t => t.Average)
+            .ToList();
+
+        var profileChoice = ProfileMapping.ToChoice(
+            student.DeclaredProfile,
+            student.DesiredCluster,
+            student.DesiredProfiles,
+            student.RecommendedCluster,
+            student.RecommendedProfiles,
+            student.RecommendationConfidence,
+            student.RecommendationUpdatedUtc,
+            student.HasProfileMismatch);
 
         return new StudentProfileDto(
             student.Id,
             student.FullName,
             student.GradeLevel,
-            student.DeclaredProfile?.ToString(),
             student.SchoolId,
             student.ClassId,
             className,
+            profileChoice,
             attendanceSummary,
-            subjectAverages);
+            subjectAverages,
+            topicAverages);
     }
 }

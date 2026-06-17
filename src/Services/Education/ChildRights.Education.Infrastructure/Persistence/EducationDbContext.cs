@@ -16,6 +16,8 @@ public sealed class EducationDbContext(DbContextOptions<EducationDbContext> opti
 
     public DbSet<SchoolClass> Classes => Set<SchoolClass>();
 
+    public DbSet<SchoolProfileOffering> SchoolProfileOfferings => Set<SchoolProfileOffering>();
+
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
 
     public DbSet<Grade> Grades => Set<Grade>();

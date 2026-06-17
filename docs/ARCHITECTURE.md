@@ -84,17 +84,44 @@ Example rules implemented in `Analysis.Domain` (`StudentRiskRules`):
 
 - **Attendance** — 5 → Yellow, 10 → Orange (parents/admin), 20 → Red (escalate).
 - **Academic risk** — any subject average below 4/12.
-- **Profile mismatch** — declared specialisation underperforms a clearly stronger area.
+- **Profile mismatch** — the pupil's desired cluster differs from the data-driven one.
 - **Medical** (from the Medical service) — recurring condition category.
 - **Bullying** (from Juvenile Police) — class-level signal, risk to the whole class.
 
-## 5. Recommendations (education profiling)
+## 5. Profile-education reform (the platform focus)
 
-`StudentRiskRules` + aggregation produce recommendations at several scopes:
+The 2027 reform is modelled in the shared kernel as a **direction → cluster → profile**
+hierarchy (`EducationProfile`, `ProfileCluster`, `EducationDirection`, `InstitutionType`
+with `ProfileTaxonomy` / `InstitutionTaxonomy`). A pupil enrols in one **cluster** and may
+choose **several profiles** within it.
 
-- **Pupil** — which profile to choose in grade 10, or whether to change the current one.
+Topic-aware profiling (`ProfileScoringMap`, `StudentRiskRules`):
+
+- Grades carry a **topic**; `ScoreProfiles` weights topics above whole-subject averages.
+- `ScoreClusters` aggregates evidence per cluster with **Bayesian shrinkage**, so a single
+  thin signal can't outrank a well-evidenced cluster.
+- The engine recommends a **cluster + the strongest profiles** in it, compares it with the
+  pupil's **desired** cluster, and writes the result back to Education via
+  `StudentProfileRecommendedIntegrationEvent` (establishing the pupil↔recommended link).
+
+Recommendation scopes:
+
+- **Pupil** — recommended cluster/profiles; profile-change when desired ≠ recommended.
 - **School** — which profiles to open/close based on aggregated demand.
 - **Community / region** — which courses to create for continuing-education academies.
+
+## 5a. University fit, gaps & demand
+
+`UniversityFitCalculator` (pure domain) matches a pupil's subject/topic grades against a
+university programme's key areas:
+
+- **Fit** — a 0–1 score and whether the pupil meets the competitive threshold.
+- **Gaps** — concrete, topic-level guidance ("raise Фінансове право from 7 to 9").
+- **Interest** — a pupil can express interest in a specialty (`ProgramInterest`).
+- **Depersonalised demand** — per-specialty counts (explicit interest + data-driven
+  candidates from `StudentProfileInsight`) for universities and communities; no individual
+  pupil is ever exposed.
+
 
 ## 6. AI strategy & best practices
 

@@ -34,17 +34,3 @@ public enum RunStatus
     Completed = 1,
     Failed = 2
 }
-
-/// <summary>
-/// Specialisation areas the profiling engine reasons about. Independent of the
-/// Education context's enum so the two bounded contexts stay decoupled.
-/// </summary>
-public enum ProfileArea
-{
-    Mathematics = 1,
-    NaturalSciences = 2,
-    Philology = 3,
-    SocialSciences = 4,
-    Technology = 5,
-    Arts = 6
-}

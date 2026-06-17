@@ -87,11 +87,18 @@ internal sealed class OpenAiAnalysisProvider(
     private static string BuildUserPrompt(StudentSnapshot snapshot)
     {
         var subjects = string.Join(", ", snapshot.SubjectAverages.Select(kv => $"{kv.Key}: {kv.Value:0.0}"));
+        var topics = string.Join(", ", snapshot.TopicAverages.Select(t => $"{t.Subject}/{t.Topic}: {t.Average:0.0}"));
+        var desired = snapshot.DesiredProfiles.Count > 0
+            ? string.Join(", ", snapshot.DesiredProfiles)
+            : "немає";
+
         return
             $"Клас (рік навчання): {snapshot.GradeLevel}. " +
-            $"Обраний профіль: {snapshot.DeclaredProfile ?? "немає"}. " +
+            $"Поточний профіль: {snapshot.DeclaredProfile?.ToString() ?? "немає"}. " +
+            $"Бажані профілі: {desired}. " +
             $"Пропуски без поважної причини: {snapshot.UnexcusedAbsences}. " +
-            $"Середні бали за предметами: {subjects}.";
+            $"Середні бали за предметами: {subjects}. " +
+            $"Середні бали за темами: {topics}.";
     }
 
     private AnalysisResult Parse(string content)

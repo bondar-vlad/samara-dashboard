@@ -7,12 +7,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ChildRights.Education.Application.Students.Commands;
 
-/// <summary>Records a subject grade (Ukrainian 1–12 scale) for a pupil.</summary>
+/// <summary>Records a subject grade (Ukrainian 1–12 scale) for a pupil, optionally for a topic.</summary>
 public sealed record RecordGradeCommand(
     Guid StudentId,
     string Subject,
     int Value,
-    string Term) : ICommand<Guid>;
+    string Term,
+    string? Topic = null) : ICommand<Guid>;
 
 public sealed class RecordGradeCommandValidator : AbstractValidator<RecordGradeCommand>
 {
@@ -22,6 +23,7 @@ public sealed class RecordGradeCommandValidator : AbstractValidator<RecordGradeC
         RuleFor(x => x.Subject).NotEmpty().MaximumLength(120);
         RuleFor(x => x.Value).InclusiveBetween(1, 12);
         RuleFor(x => x.Term).NotEmpty().MaximumLength(40);
+        RuleFor(x => x.Topic).MaximumLength(160);
     }
 }
 
@@ -44,7 +46,8 @@ internal sealed class RecordGradeCommandHandler(IEducationDbContext context)
             command.Subject,
             command.Value,
             command.Term,
-            DateOnly.FromDateTime(DateTime.UtcNow));
+            DateOnly.FromDateTime(DateTime.UtcNow),
+            string.IsNullOrWhiteSpace(command.Topic) ? null : command.Topic.Trim());
 
         context.Grades.Add(grade);
         await context.SaveChangesAsync(cancellationToken);

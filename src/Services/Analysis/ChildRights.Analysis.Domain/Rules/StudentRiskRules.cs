@@ -93,74 +93,115 @@ public static class StudentRiskRules
         List<FlagFinding> flags,
         List<RecommendationFinding> recommendations)
     {
-        var areaAverages = SubjectProfileMap.AreaAverages(snapshot.SubjectAverages);
-        if (areaAverages.Count == 0)
+        var profileScores = ProfileScoringMap.ScoreProfiles(snapshot.SubjectAverages, snapshot.TopicAverages);
+        if (profileScores.Count == 0)
         {
             return;
         }
 
-        var best = areaAverages.OrderByDescending(kv => kv.Value).First();
-        var confidence = Confidence(areaAverages);
-        var rationale = BuildAreaRationale(areaAverages);
+        // Choose the strongest cluster using evidence-aware cluster scoring (breadth + strength),
+        // then pick the strongest profiles within that cluster.
+        var clusterScores = ProfileScoringMap.ScoreClusters(snapshot.SubjectAverages, snapshot.TopicAverages)
+            .OrderByDescending(kv => kv.Value)
+            .ToList();
 
-        if (snapshot.GradeLevel == 9)
+        var bestCluster = clusterScores[0].Key;
+        var confidence = Confidence(clusterScores.Select(c => c.Value).ToList());
+
+        // Within the best cluster, the profiles the pupil is strongest in (several allowed).
+        var recommendedProfiles = profileScores
+            .Where(kv => ProfileTaxonomy.ClusterOf(kv.Key) == bestCluster)
+            .OrderByDescending(kv => kv.Value)
+            .Where(kv => kv.Value >= 7)
+            .Select(kv => kv.Key)
+            .Take(3)
+            .ToList();
+
+        if (recommendedProfiles.Count == 0)
         {
-            recommendations.Add(new RecommendationFinding(
-                RecommendationKind.ProfileChoice,
-                $"Рекомендований профіль для 10 класу: {SubjectProfileMap.Localize(best.Key)}",
-                $"Найкращі результати у напрямі «{SubjectProfileMap.Localize(best.Key)}» (середній бал {best.Value:0.0}).",
-                rationale,
-                confidence));
-            return;
+            recommendedProfiles = profileScores
+                .Where(kv => ProfileTaxonomy.ClusterOf(kv.Key) == bestCluster)
+                .OrderByDescending(kv => kv.Value)
+                .Select(kv => kv.Key)
+                .Take(1)
+                .ToList();
         }
 
-        if (snapshot.GradeLevel < 10 || snapshot.DeclaredProfile is null)
-        {
-            return;
-        }
+        var rationale = BuildRationale(snapshot, profileScores);
+        var clusterName = ProfileTaxonomy.LocalizeCluster(bestCluster);
+        var profileNames = string.Join(", ", recommendedProfiles.Select(ProfileTaxonomy.Localize));
 
-        var declaredArea = SubjectProfileMap.ParseDeclared(snapshot.DeclaredProfile);
-        if (declaredArea is null || !areaAverages.TryGetValue(declaredArea.Value, out var declaredAverage))
-        {
-            return;
-        }
+        var declaredCluster = snapshot.DeclaredProfile is { } declared
+            ? ProfileTaxonomy.ClusterOf(declared)
+            : (ProfileCluster?)null;
 
-        if (best.Key != declaredArea.Value && best.Value - declaredAverage >= 2.0 && declaredAverage < 7)
-        {
-            recommendations.Add(new RecommendationFinding(
-                RecommendationKind.ProfileChange,
-                $"Розглянути зміну профілю на «{SubjectProfileMap.Localize(best.Key)}»",
-                $"Поточний профіль «{SubjectProfileMap.Localize(declaredArea.Value)}» має середній бал {declaredAverage:0.0}, " +
-                $"тоді як «{SubjectProfileMap.Localize(best.Key)}» — {best.Value:0.0}.",
-                rationale,
-                confidence));
+        var kind = snapshot.GradeLevel <= 9 || declaredCluster is null
+            ? RecommendationKind.ProfileChoice
+            : declaredCluster == bestCluster
+                ? RecommendationKind.ProfileChoice
+                : RecommendationKind.ProfileChange;
 
+        var title = kind == RecommendationKind.ProfileChange
+            ? $"Розглянути зміну кластера на «{clusterName}»"
+            : $"Рекомендований кластер: {clusterName}";
+
+        recommendations.Add(new RecommendationFinding(
+            kind,
+            title,
+            $"Рекомендовані профілі в межах кластера «{clusterName}»: {profileNames}.",
+            rationale,
+            confidence,
+            bestCluster,
+            recommendedProfiles));
+
+        // Mismatch: the pupil wants a different cluster than the data recommends.
+        if (snapshot.DesiredCluster is { } desiredCluster && desiredCluster != bestCluster)
+        {
             flags.Add(new FlagFinding(
                 "EDU-PROFILE-MISMATCH",
                 FlagSeverity.Yellow,
-                "Невідповідність обраного профілю",
-                "Учень демонструє суттєво кращі результати поза межами обраного профілю.",
+                "Невідповідність бажаного профілю",
+                $"Учень обрав кластер «{ProfileTaxonomy.LocalizeCluster(desiredCluster)}», " +
+                $"проте результати вказують на «{clusterName}».",
                 Agency.Education,
-                [AudienceRole.ClassTeacher, AudienceRole.Student],
-                ["Провести профорієнтаційну консультацію"]));
+                [AudienceRole.ClassTeacher, AudienceRole.Student, AudienceRole.Parent],
+                ["Провести профорієнтаційну консультацію", "Обговорити сильні теми та відповідні профілі"]));
         }
     }
 
-    private static double Confidence(IReadOnlyDictionary<ProfileArea, double> areaAverages)
+    private static double Confidence(IReadOnlyList<double> clusterScores)
     {
-        var sorted = areaAverages.Values.OrderByDescending(value => value).ToList();
-        if (sorted.Count < 2)
+        if (clusterScores.Count < 2)
         {
-            return 0.7;
+            return 0.75;
         }
 
-        var margin = sorted[0] - sorted[1];
-        return Math.Clamp(0.5 + (margin / 12.0), 0.5, 0.95);
+        var margin = clusterScores[0] - clusterScores[1];
+        return Math.Clamp(0.5 + (margin / 12.0), 0.5, 0.97);
     }
 
-    private static string BuildAreaRationale(IReadOnlyDictionary<ProfileArea, double> areaAverages) =>
-        "Середні бали за напрямами: " +
-        string.Join("; ", areaAverages
+    private static string BuildRationale(
+        StudentSnapshot snapshot,
+        IReadOnlyDictionary<EducationProfile, double> profileScores)
+    {
+        var topProfiles = profileScores
             .OrderByDescending(kv => kv.Value)
-            .Select(kv => $"{SubjectProfileMap.Localize(kv.Key)} — {kv.Value:0.0}")) + ".";
+            .Take(3)
+            .Select(kv => $"{ProfileTaxonomy.Localize(kv.Key)} — {kv.Value:0.0}");
+
+        var rationale = "Оцінки за профілями: " + string.Join("; ", topProfiles) + ".";
+
+        var topTopics = snapshot.TopicAverages
+            .OrderByDescending(t => t.Average)
+            .Take(3)
+            .Select(t => $"{t.Topic} ({t.Average:0.0})")
+            .ToList();
+
+        if (topTopics.Count > 0)
+        {
+            rationale += " Найсильніші теми: " + string.Join(", ", topTopics) + ".";
+        }
+
+        return rationale;
+    }
 }

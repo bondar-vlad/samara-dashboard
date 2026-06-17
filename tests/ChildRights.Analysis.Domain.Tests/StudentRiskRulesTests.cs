@@ -9,9 +9,11 @@ public sealed class StudentRiskRulesTests
 {
     private static StudentSnapshot Snapshot(
         int gradeLevel = 9,
-        string? declaredProfile = null,
+        EducationProfile? declaredProfile = null,
+        IReadOnlyList<EducationProfile>? desiredProfiles = null,
         int unexcused = 0,
-        Dictionary<string, double>? subjectAverages = null) =>
+        Dictionary<string, double>? subjectAverages = null,
+        IReadOnlyList<TopicScore>? topicAverages = null) =>
         new(
             Guid.NewGuid(),
             "Тест Учень",
@@ -19,8 +21,10 @@ public sealed class StudentRiskRulesTests
             Guid.NewGuid(),
             gradeLevel,
             declaredProfile,
+            desiredProfiles ?? [],
             unexcused,
-            subjectAverages ?? new Dictionary<string, double>());
+            subjectAverages ?? new Dictionary<string, double>(),
+            topicAverages ?? []);
 
     [Theory]
     [InlineData(4, FlagSeverity.Green)]
@@ -64,7 +68,7 @@ public sealed class StudentRiskRulesTests
     }
 
     [Fact]
-    public void Grade9_pupil_receives_a_profile_choice_recommendation()
+    public void Grade9_pupil_receives_a_profile_choice_recommendation_in_strongest_cluster()
     {
         var evaluation = StudentRiskRules.Evaluate(Snapshot(
             gradeLevel: 9,
@@ -73,43 +77,69 @@ public sealed class StudentRiskRulesTests
                 ["Біологія"] = 11,
                 ["Хімія"] = 12,
                 ["Математика"] = 7
-            }));
+            },
+            topicAverages:
+            [
+                new TopicScore("Біологія", "Анатомія людини", 12),
+                new TopicScore("Біологія", "Генетика", 12)
+            ]));
 
         var recommendation = Assert.Single(
             evaluation.Recommendations, r => r.Kind == RecommendationKind.ProfileChoice);
-        Assert.Contains("Природничий", recommendation.Title);
+        Assert.Equal(ProfileCluster.ProfessionalLifeSciences, recommendation.RecommendedCluster);
+        Assert.Contains(EducationProfile.Medical, recommendation.RecommendedProfiles!);
     }
 
     [Fact]
-    public void Grade10_profile_mismatch_recommends_a_profile_change()
+    public void Topic_signal_steers_recommendation_within_law_toward_business_cluster()
     {
-        // Declared Mathematics but much stronger in Philology.
+        // Strong finance topics inside law/economics → business cluster, not the broad legal one.
         var evaluation = StudentRiskRules.Evaluate(Snapshot(
             gradeLevel: 10,
-            declaredProfile: "Mathematics",
+            declaredProfile: EducationProfile.SocialHumanitarian,
             subjectAverages: new Dictionary<string, double>
             {
-                ["Математика"] = 5,
-                ["Українська література"] = 11,
-                ["Українська мова"] = 10
-            }));
+                ["Правознавство"] = 9,
+                ["Економіка"] = 11
+            },
+            topicAverages:
+            [
+                new TopicScore("Правознавство", "Фінансове право", 12),
+                new TopicScore("Економіка", "Фінанси та інвестиції", 12),
+                new TopicScore("Правознавство", "Кримінальне право", 6)
+            ]));
 
-        Assert.Contains(evaluation.Recommendations, r => r.Kind == RecommendationKind.ProfileChange);
+        var recommendation = Assert.Single(evaluation.Recommendations, r => r.RecommendedCluster is not null);
+        Assert.Equal(ProfileCluster.ProfessionalBusinessServices, recommendation.RecommendedCluster);
+        Assert.Contains(EducationProfile.BusinessAdministration, recommendation.RecommendedProfiles!);
+    }
+
+    [Fact]
+    public void Desired_cluster_differing_from_recommended_raises_mismatch_flag()
+    {
+        // Wants the academic humanitarian cluster, but data points to business services.
+        var evaluation = StudentRiskRules.Evaluate(Snapshot(
+            gradeLevel: 10,
+            desiredProfiles: [EducationProfile.SocialHumanitarian],
+            subjectAverages: new Dictionary<string, double> { ["Економіка"] = 11 },
+            topicAverages:
+            [
+                new TopicScore("Економіка", "Фінанси та інвестиції", 12),
+                new TopicScore("Економіка", "Мікроекономіка", 11)
+            ]));
+
         Assert.Contains(evaluation.Flags, f => f.RuleCode == "EDU-PROFILE-MISMATCH");
     }
 
     [Fact]
-    public void Well_matched_pupil_produces_no_profile_change()
+    public void Desired_cluster_matching_recommended_raises_no_mismatch_flag()
     {
         var evaluation = StudentRiskRules.Evaluate(Snapshot(
             gradeLevel: 10,
-            declaredProfile: "NaturalSciences",
-            subjectAverages: new Dictionary<string, double>
-            {
-                ["Біологія"] = 11,
-                ["Хімія"] = 12
-            }));
+            desiredProfiles: [EducationProfile.Medical],
+            subjectAverages: new Dictionary<string, double> { ["Біологія"] = 12, ["Хімія"] = 11 },
+            topicAverages: [new TopicScore("Біологія", "Генетика", 12)]));
 
-        Assert.DoesNotContain(evaluation.Recommendations, r => r.Kind == RecommendationKind.ProfileChange);
+        Assert.DoesNotContain(evaluation.Flags, f => f.RuleCode == "EDU-PROFILE-MISMATCH");
     }
 }

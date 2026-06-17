@@ -12,5 +12,13 @@ public interface IAnalysisDbContext
 
     DbSet<AnalysisRun> AnalysisRuns { get; }
 
+    DbSet<University> Universities { get; }
+
+    DbSet<UniversityProgram> UniversityPrograms { get; }
+
+    DbSet<StudentProfileInsight> StudentProfileInsights { get; }
+
+    DbSet<ProgramInterest> ProgramInterests { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

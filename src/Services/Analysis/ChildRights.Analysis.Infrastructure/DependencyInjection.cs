@@ -25,6 +25,7 @@ public static class DependencyInjection
         services.AddPostgresDbContext<AnalysisDbContext>(configuration);
         services.AddScoped<IAnalysisDbContext>(sp => sp.GetRequiredService<AnalysisDbContext>());
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AnalysisDbContext>());
+        services.AddScoped<IDataSeeder, UniversityCatalogSeeder>();
 
         // Resilient typed client to the Education microservice.
         var educationBaseUrl = configuration["Services:Education"] ?? "http://localhost:5101";

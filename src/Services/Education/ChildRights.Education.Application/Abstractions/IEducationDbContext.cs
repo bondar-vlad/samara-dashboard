@@ -15,6 +15,8 @@ public interface IEducationDbContext
 
     DbSet<SchoolClass> Classes { get; }
 
+    DbSet<SchoolProfileOffering> SchoolProfileOfferings { get; }
+
     DbSet<AttendanceRecord> AttendanceRecords { get; }
 
     DbSet<Grade> Grades { get; }

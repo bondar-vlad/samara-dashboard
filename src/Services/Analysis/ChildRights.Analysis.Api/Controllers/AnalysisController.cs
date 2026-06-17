@@ -4,6 +4,8 @@ using ChildRights.BuildingBlocks.Infrastructure.Web;
 using ChildRights.Analysis.Application.Abstractions;
 using ChildRights.Analysis.Application.Runs.Commands;
 using ChildRights.Analysis.Application.Runs.Queries;
+using ChildRights.Analysis.Application.Universities.Commands;
+using ChildRights.Analysis.Application.Universities.Queries;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChildRights.Analysis.Api.Controllers;
@@ -38,4 +40,26 @@ public sealed class AnalysisController(IDispatcher dispatcher, IAiAnalysisProvid
     [HttpGet("runs")]
     public async Task<IActionResult> GetRuns([FromQuery] int take = 50, CancellationToken cancellationToken = default)
         => ToResult(await Dispatcher.Query(new ListAnalysisRunsQuery(take), cancellationToken));
+
+    /// <summary>
+    /// Ranks university specialties by how well the pupil fits them, with concrete topic/subject
+    /// improvement advice for each. The pupil-facing "which university suits me" view.
+    /// </summary>
+    [HttpGet("students/{studentId:guid}/university-fit")]
+    public async Task<IActionResult> UniversityFit(
+        Guid studentId,
+        [FromQuery] int take = 5,
+        [FromQuery] string? cluster = null,
+        CancellationToken cancellationToken = default)
+        => ToResult(await Dispatcher.Query(new GetStudentUniversityFitQuery(studentId, take, cluster), cancellationToken));
+
+    /// <summary>Gap analysis for one chosen specialty: exactly what to improve and by how much.</summary>
+    [HttpGet("students/{studentId:guid}/university-fit/{programId:guid}")]
+    public async Task<IActionResult> ProgramGap(Guid studentId, Guid programId, CancellationToken cancellationToken)
+        => ToResult(await Dispatcher.Query(new GetStudentProgramGapQuery(studentId, programId), cancellationToken));
+
+    /// <summary>Records the pupil's interest in a specialty (feeds depersonalised university demand).</summary>
+    [HttpPost("students/{studentId:guid}/program-interest/{programId:guid}")]
+    public async Task<IActionResult> ExpressInterest(Guid studentId, Guid programId, CancellationToken cancellationToken)
+        => ToResult(await Dispatcher.Send(new ExpressProgramInterestCommand(studentId, programId), cancellationToken));
 }

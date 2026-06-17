@@ -11,7 +11,7 @@ builder.AddServiceDefaults("Education API");
 builder.Services.AddApiControllers();
 builder.Services.AddEducationApplication();
 builder.Services.AddEducationInfrastructure(builder.Configuration);
-builder.Services.AddEventBus(builder.Configuration);
+builder.Services.AddEventBus(builder.Configuration, ChildRights.Education.Infrastructure.DependencyInjection.AddEducationConsumers);
 
 var app = builder.Build();
 

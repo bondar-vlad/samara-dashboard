@@ -38,9 +38,30 @@ Show "1. Education profile (Oleh)" $profile
 $run = Invoke-RestMethod -Method Post "$BaseUrl/analysis/api/analysis/students/$olehId/run"
 Show "2. Analysis run (Oleh) -> red flags + recommendations" $run
 
-# 3. Analysis: profiling recommendation for Mariia (change profile).
+# 3. Analysis: topic-aware profiling for Mariia -> recommended cluster + mismatch.
 $runMariia = Invoke-RestMethod -Method Post "$BaseUrl/analysis/api/analysis/students/$mariiaId/run"
-Show "3. Analysis run (Mariia) -> profiling recommendation" $runMariia
+Show "3. Analysis run (Mariia) -> recommended cluster + profile mismatch" $runMariia
+
+# 3a. Education: the recommendation is written back onto the pupil (desired vs recommended).
+Start-Sleep -Seconds 2
+$mariiaProfile = Invoke-RestMethod "$BaseUrl/education/api/students/$mariiaId"
+Show "3a. Mariia profile choice (desired vs recommended cluster)" $mariiaProfile.profileChoice
+
+# 3b. Universities: which specialties fit Mariia and what to improve for each.
+$fit = Invoke-RestMethod "$BaseUrl/analysis/api/analysis/students/$mariiaId/university-fit?take=3"
+Show "3b. Mariia university fit + improvement advice" $fit
+
+# 3c. Mariia expresses interest in the top specialty -> feeds depersonalised demand.
+if ($fit.matches.Count -gt 0) {
+    $topProgram = $fit.matches[0].programId
+    Invoke-RestMethod -Method Post "$BaseUrl/analysis/api/analysis/students/$mariiaId/program-interest/$topProgram" | Out-Null
+    $gap = Invoke-RestMethod "$BaseUrl/analysis/api/analysis/students/$mariiaId/university-fit/$topProgram"
+    Show "3c. Gap analysis for the chosen specialty" $gap
+}
+
+# 3d. Depersonalised demand for universities (no individual pupil exposed).
+$demand = Invoke-RestMethod "$BaseUrl/analysis/api/universities/demand"
+Show "3d. Depersonalised university demand" $demand
 
 # 4. Medical: third recurring visit -> medical concern event -> medical red flag.
 $visit = Invoke-RestMethod -Method Post "$BaseUrl/medical/api/medical/visits" -ContentType "application/json" -Body (@{

@@ -33,13 +33,23 @@ public sealed class StudentsController(IDispatcher dispatcher) : ApiControllerBa
             new RecordAttendanceCommand(id, request.Date, request.Status, request.Subject),
             cancellationToken));
 
-    /// <summary>Records a subject grade for a pupil.</summary>
+    /// <summary>Records a subject grade for a pupil (optionally for a curriculum topic).</summary>
     [HttpPost("{id:guid}/grades")]
     public async Task<IActionResult> RecordGrade(
         Guid id,
         [FromBody] RecordGradeRequest request,
         CancellationToken cancellationToken)
         => ToResult(await Dispatcher.Send(
-            new RecordGradeCommand(id, request.Subject, request.Value, request.Term),
+            new RecordGradeCommand(id, request.Subject, request.Value, request.Term, request.Topic),
+            cancellationToken));
+
+    /// <summary>Sets the profiles (within one cluster) the pupil self-reports they want to pursue.</summary>
+    [HttpPut("{id:guid}/desired-profiles")]
+    public async Task<IActionResult> SetDesiredProfiles(
+        Guid id,
+        [FromBody] SetDesiredProfilesRequest request,
+        CancellationToken cancellationToken)
+        => ToResult(await Dispatcher.Send(
+            new SetDesiredProfilesCommand(id, request.DesiredProfiles),
             cancellationToken));
 }

@@ -1,9 +1,10 @@
 # Child Rights Monitoring Dashboard
 
-A management dashboard backend for monitoring **child rights** by aggregating data from
-multiple government agencies — **education, social services, medical and juvenile
-police** — and turning it into tiered **red flags**, education **profiling
-recommendations**, and coordinated **cross-agency actions**.
+A management dashboard backend for monitoring **child rights**, with a focus on the
+**2027 Ukrainian profile-education reform**. It aggregates data from multiple government
+agencies — **education, social services, medical and juvenile police** — and turns it into
+tiered **red flags**, **topic-aware profile recommendations**, **university-fit guidance**,
+and coordinated **cross-agency actions**.
 
 Built as a **.NET 10** REST API platform of **microservices** (one per agency) with
 clean architecture, an AI-ready analysis engine, PostgreSQL, RabbitMQ messaging,
@@ -17,6 +18,7 @@ Swagger on every service, and a one-command Docker demo.
 ## Table of contents
 
 - [What it does](#what-it-does)
+- [Profile-education reform model](#profile-education-reform-model)
 - [Architecture at a glance](#architecture-at-a-glance)
 - [Tech stack](#tech-stack)
 - [Quick start (Docker — recommended)](#quick-start-docker--recommended)
@@ -32,15 +34,20 @@ Swagger on every service, and a one-command Docker demo.
 
 ## What it does
 
-- **Ingests** data from agency microservices (attendance, grades, medical visits,
-  bullying reports).
+- **Ingests** data from agency microservices (attendance, **topic-level grades**, medical
+  visits, bullying reports).
 - **Analyses** it at multiple levels — pupil, class, school, community, region, country.
-- **Raises tiered red flags** (🟡 Yellow → 🟠 Orange → 🔴 Red), each with the audiences
-  to inform (pupil, parent, class teacher, administration, education-safety officer,
-  social service, juvenile police, medical service) and recommended actions.
-- **Recommends education profiles** — which specialisation a pupil should pick in grade 10,
-  whether to switch profile, which profiles a school/community should open, and which
-  courses continuing-education academies should create.
+- **Recommends specialisation profiles** for the 2027 reform: a topic-aware engine scores
+  the pupil against the **direction → cluster → profile** hierarchy and recommends a
+  cluster and the best-fitting profiles within it. It compares the pupil's **desired**
+  profiles against the **recommended** ones and flags a mismatch.
+- **Guides university choice** — ranks university specialties by how well a pupil fits them
+  and tells the pupil exactly **which subjects/topics to improve** (and by how much) for a
+  chosen specialty.
+- **Sends depersonalised demand to universities & communities** — aggregated interest and
+  data-driven candidate counts per specialty, never exposing an individual pupil.
+- **Raises tiered red flags** (🟡 Yellow → 🟠 Orange → 🔴 Red), each with the audiences to
+  inform and recommended actions.
 - **Coordinates agencies** — Red-severity flags automatically generate inter-agency
   referrals (e.g. excessive absences → social services / juvenile police).
 
@@ -51,10 +58,52 @@ Swagger on every service, and a one-command Docker demo.
 | 10 unexcused absences                    | 🟠 Orange | parents + administration                           |
 | 20 unexcused absences                    | 🔴 Red    | escalate to social services & juvenile police      |
 | Subject grades fall below threshold      | 🟡 Yellow | class teacher + parents                            |
+| Desired profile ≠ recommended cluster    | 🟡 Yellow | profile-orientation consultation (pupil + parent)  |
 | Recurring illness (medical category)     | 🟠 Orange | refer to a specialist (medical)                    |
 | Bullying report in a pupil's class       | 🔴 Red    | whole-class risk → juvenile police + safety officer |
 
 ---
+
+## Profile-education reform model
+
+The reform's structure is modelled as a three-level hierarchy in the shared kernel and is
+served to clients via `GET /api/reference/reform` (Education):
+
+```
+Direction (Academic | Professional)
+   └─ Cluster (a pupil enrols in one cluster…)
+        └─ Profile (…and may choose SEVERAL profiles within it)
+```
+
+- **12 profiles** — 2 academic clusters (Природничо-математичний / STEM, Суспільно-гуманітарний)
+  plus 10 professional directions (Аграрний, Будівельний, Транспортно-логістичний,
+  Інженерно-технологічний, Медичний, ІТ, Бізнес та адміністрування, Освітньо-гуманітарний,
+  Гостинність та організація подій, Послуги краси та дизайн).
+- **Institution types** decide which profiles an institution may offer: academic lyceums
+  offer academic clusters; professional lyceums and фахові коледжі offer professional ones;
+  gymnasiums are the basic-secondary feeders. (`InstitutionType` + `InstitutionTaxonomy`.)
+- **Topic-aware scoring** — grades carry a **topic** (e.g. "Фінансове право" inside
+  Правознавство). Topics are weighted higher than whole-subject averages and cluster scores
+  use evidence-weighted shrinkage, so a pupil strong in finance topics is steered toward the
+  business cluster rather than the broad legal one.
+- **Three profile links per pupil** — `DeclaredProfile` (current), `DesiredProfiles`
+  (self-reported, one cluster) and `RecommendedProfiles` (written back from Analysis).
+
+### Profile & university flow
+
+```mermaid
+flowchart LR
+    G[Topic-level grades] --> EDU[Education]
+    EDU -- profile + topics (HTTP) --> AN[Analysis]
+    AN -- topic-aware scoring --> REC[Recommended cluster + profiles]
+    REC -- StudentProfileRecommended --> EDU
+    AN -- university fit + gaps --> PUP[Pupil guidance]
+    PUP -- desired specialty --> DEM[(Depersonalised demand)]
+    DEM --> UNI[Universities & communities]
+```
+
+---
+
 
 ## Architecture at a glance
 
@@ -179,11 +228,11 @@ The script walks through:
 | Service         | Port | Responsibility                                                |
 | --------------- | ---- | ------------------------------------------------------------- |
 | API Gateway     | 8080 | Single entry point (YARP), routes to all services             |
-| Education       | 5101 | Pupils, classes, attendance, grades; emits education events   |
+| Education       | 5101 | Pupils, classes, **institutions & offered profiles**, attendance, **topic grades**, desired profiles; emits education events |
 | Social Services | 5102 | Social cases; consumes inter-agency referrals                 |
 | Medical         | 5103 | Medical visits; emits recurring-concern events                |
 | Juvenile Police | 5104 | Bullying reports; emits class-level signals                   |
-| Analysis (AI)   | 5105 | Rule/AI engine: red flags, recommendations, runs, dashboard   |
+| Analysis (AI)   | 5105 | Topic-aware profiling, red flags, **university fit/gap & demand**, runs, dashboard |
 | Notifications   | 5106 | Fan-out to audiences; raises inter-agency referrals           |
 
 Full endpoint list: [docs/API.md](docs/API.md).
@@ -199,12 +248,15 @@ Full endpoint list: [docs/API.md](docs/API.md).
 - **Audiences**: pupil, parent, teacher, class teacher, school administration,
   education-safety officer, social service, juvenile police, medical service, community
   and regional authorities.
-- **Recommendations**: profile choice (grade 10), profile change, open/close a school
+- **Profile recommendations**: recommended **cluster + profiles** (topic-aware), profile
+  change when the desired cluster differs from the data-driven one, open/close a school
   profile, create an academy course for a community/region.
+- **University guidance**: ranked specialty fit with concrete subject/topic improvement
+  gaps, and depersonalised per-specialty demand for universities.
 
 The rules are pure, unit-testable domain logic in
 `src/Services/Analysis/ChildRights.Analysis.Domain` (`StudentRiskRules`,
-`SubjectProfileMap`).
+`ProfileScoringMap`, `UniversityFitCalculator`).
 
 ---
 

@@ -43,7 +43,10 @@ internal sealed class ListStudentsQueryHandler(IEducationDbContext context)
                 s.FullName,
                 classNames.GetValueOrDefault(s.ClassId, string.Empty),
                 s.GradeLevel,
-                s.SchoolId))
+                s.SchoolId,
+                s.DesiredCluster?.ToString(),
+                s.RecommendedCluster?.ToString(),
+                s.HasProfileMismatch))
             .ToList();
 
         return Result.Success(result);
