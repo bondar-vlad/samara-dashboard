@@ -178,5 +178,17 @@ services:
       - analysis
       - notifications
 
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+      args:
+        # The Next server proxies /bff/* to the gateway over the compose network.
+        BACKEND_URL: http://gateway:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - gateway
+
 volumes:
   pgdata:
