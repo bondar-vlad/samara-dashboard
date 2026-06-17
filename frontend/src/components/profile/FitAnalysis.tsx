@@ -10,6 +10,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import type { Recommendation, ProgramMatch } from "@/lib/types";
+import { ORANGE } from "@/theme/colors";
 
 /** A single subject/topic gap rendered as current -> target with a bar. */
 function GapRow({
@@ -45,8 +46,8 @@ function GapRow({
             height: 8,
             borderRadius: 4,
             mt: 0.5,
-            "& .MuiLinearProgress-bar": { bgcolor: "#c77800" },
-            bgcolor: "#eee",
+            "& .MuiLinearProgress-bar": { bgcolor: ORANGE },
+            bgcolor: "#eef0f6",
           }}
         />
       </Tooltip>

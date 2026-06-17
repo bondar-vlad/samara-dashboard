@@ -1,12 +1,15 @@
 import type { Severity } from "@/lib/types";
+import { RED, YELLOW, ORANGE, GREEN } from "@/theme/colors";
 
-type MuiColor = "default" | "warning" | "error" | "success";
+type MuiColor = "default" | "warning" | "error" | "success" | "secondary";
 
 /** Maps backend severity to a MUI palette color + a readable hex for borders. */
 export function severityColor(severity: Severity): MuiColor {
   switch (severity) {
     case "Red":
       return "error";
+    case "Orange":
+      return "secondary";
     case "Yellow":
       return "warning";
     case "Green":
@@ -19,11 +22,13 @@ export function severityColor(severity: Severity): MuiColor {
 export function severityHex(severity: Severity): string {
   switch (severity) {
     case "Red":
-      return "#c62828";
+      return RED;
+    case "Orange":
+      return ORANGE;
     case "Yellow":
-      return "#c77800";
+      return YELLOW;
     case "Green":
-      return "#2e7d54";
+      return GREEN;
     default:
       return "#9e9e9e";
   }

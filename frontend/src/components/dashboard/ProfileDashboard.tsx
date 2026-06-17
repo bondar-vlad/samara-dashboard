@@ -28,13 +28,11 @@ import GroupedBarChart, {
 } from "@/components/charts/GroupedBarChart";
 import { useStudents, useReformReference } from "@/lib/hooks";
 import type { StudentListItem } from "@/lib/types";
-
-const DESIRED = "#3b6ea5";
-const RECOMMENDED = "#0a0a0a";
+import { SERIES_DESIRED, SERIES_RECOMMENDED, YELLOW, GREEN } from "@/theme/colors";
 
 const SERIES: SeriesDef[] = [
-  { key: "desired", name: "Бажання учнів (анкетування)", color: DESIRED },
-  { key: "recommended", name: "Рекомендація системи", color: RECOMMENDED },
+  { key: "desired", name: "Бажання учнів (анкетування)", color: SERIES_DESIRED },
+  { key: "recommended", name: "Рекомендація системи", color: SERIES_RECOMMENDED },
 ];
 
 function Legend() {
@@ -92,7 +90,7 @@ function ClusterTable({
                 onClick={() => onOpen(s.id)}
                 sx={{
                   cursor: "pointer",
-                  bgcolor: s.hasProfileMismatch ? "#c778000d" : undefined,
+                  bgcolor: s.hasProfileMismatch ? `${YELLOW}14` : undefined,
                 }}
               >
                 <TableCell sx={{ fontWeight: 600 }}>{s.fullName}</TableCell>
@@ -108,7 +106,7 @@ function ClusterTable({
                       label="Розбіжність"
                     />
                   ) : (
-                    <CheckCircleOutlineIcon sx={{ color: "#2e7d54", fontSize: 20 }} />
+                    <CheckCircleOutlineIcon sx={{ color: GREEN, fontSize: 20 }} />
                   )}
                 </TableCell>
               </TableRow>
