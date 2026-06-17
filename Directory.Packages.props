@@ -1,0 +1,49 @@
+<Project>
+
+  <!-- Central Package Management: all NuGet versions are declared here once. -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- API / OpenAPI -->
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="9.0.6" />
+
+    <!-- Persistence -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+
+    <!-- Dependency injection abstractions (for class libraries) -->
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+
+    <!-- Validation -->
+    <PackageVersion Include="FluentValidation" Version="12.0.0" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
+
+    <!-- Logging -->
+    <PackageVersion Include="Serilog.AspNetCore" Version="9.0.0" />
+
+    <!-- Messaging (integration events) -->
+    <PackageVersion Include="MassTransit" Version="8.3.0" />
+    <PackageVersion Include="MassTransit.RabbitMQ" Version="8.3.0" />
+
+    <!-- API Gateway -->
+    <PackageVersion Include="Yarp.ReverseProxy" Version="2.3.0" />
+
+    <!-- Resilience for outbound HTTP + AI calls -->
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.6.0" />
+
+    <!-- Testing -->
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageVersion Include="xunit" Version="2.9.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+</Project>

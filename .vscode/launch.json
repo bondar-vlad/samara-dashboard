@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    { "name": "Education", "type": "coreclr", "request": "launch", "preLaunchTask": "build", "program": "${workspaceFolder}/src/Services/Education/ChildRights.Education.Api/bin/Debug/net10.0/ChildRights.Education.Api.dll", "cwd": "${workspaceFolder}/src/Services/Education/ChildRights.Education.Api", "env": { "ASPNETCORE_ENVIRONMENT": "Development" } },
+    { "name": "Social", "type": "coreclr", "request": "launch", "preLaunchTask": "build", "program": "${workspaceFolder}/src/Services/Social/ChildRights.Social.Api/bin/Debug/net10.0/ChildRights.Social.Api.dll", "cwd": "${workspaceFolder}/src/Services/Social/ChildRights.Social.Api", "env": { "ASPNETCORE_ENVIRONMENT": "Development" } },
+    { "name": "Medical", "type": "coreclr", "request": "launch", "preLaunchTask": "build", "program": "${workspaceFolder}/src/Services/Medical/ChildRights.Medical.Api/bin/Debug/net10.0/ChildRights.Medical.Api.dll", "cwd": "${workspaceFolder}/src/Services/Medical/ChildRights.Medical.Api", "env": { "ASPNETCORE_ENVIRONMENT": "Development" } },
+    { "name": "JuvenilePolice", "type": "coreclr", "request": "launch", "preLaunchTask": "build", "program": "${workspaceFolder}/src/Services/JuvenilePolice/ChildRights.JuvenilePolice.Api/bin/Debug/net10.0/ChildRights.JuvenilePolice.Api.dll", "cwd": "${workspaceFolder}/src/Services/JuvenilePolice/ChildRights.JuvenilePolice.Api", "env": { "ASPNETCORE_ENVIRONMENT": "Development" } },
+    { "name": "Analysis", "type": "coreclr", "request": "launch", "preLaunchTask": "build", "program": "${workspaceFolder}/src/Services/Analysis/ChildRights.Analysis.Api/bin/Debug/net10.0/ChildRights.Analysis.Api.dll", "cwd": "${workspaceFolder}/src/Services/Analysis/ChildRights.Analysis.Api", "env": { "ASPNETCORE_ENVIRONMENT": "Development" } },
+    { "name": "Notifications", "type": "coreclr", "request": "launch", "preLaunchTask": "build", "program": "${workspaceFolder}/src/Services/Notifications/ChildRights.Notifications.Api/bin/Debug/net10.0/ChildRights.Notifications.Api.dll", "cwd": "${workspaceFolder}/src/Services/Notifications/ChildRights.Notifications.Api", "env": { "ASPNETCORE_ENVIRONMENT": "Development" } },
+    { "name": "Gateway", "type": "coreclr", "request": "launch", "preLaunchTask": "build", "program": "${workspaceFolder}/src/ApiGateway/ChildRights.ApiGateway/bin/Debug/net10.0/ChildRights.ApiGateway.dll", "cwd": "${workspaceFolder}/src/ApiGateway/ChildRights.ApiGateway", "env": { "ASPNETCORE_ENVIRONMENT": "Development" } }
+  ],
+  "compounds": [
+    {
+      "name": "All services + gateway",
+      "configurations": ["Education", "Social", "Medical", "JuvenilePolice", "Analysis", "Notifications", "Gateway"],
+      "stopAll": true
+    }
+  ]
+}

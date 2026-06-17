@@ -1,0 +1,43 @@
+# Build artifacts
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+artifacts/
+
+# .NET
+*.user
+*.userosscache
+*.suo
+*.userprefs
+project.lock.json
+project.fragment.lock.json
+.vs/
+*.vspscc
+*.vssscc
+
+# Rider / IDE
+.idea/
+*.sln.iml
+
+# VS Code (keep shared settings, ignore local)
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# Environment / secrets
+*.env
+.env.local
+appsettings.*.local.json
+secrets.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test results
+[Tt]est[Rr]esult*/
+coverage*.json
+coverage*.xml
+*.coverage

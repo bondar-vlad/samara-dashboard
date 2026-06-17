@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ChildRights.Contracts</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ChildRights.BuildingBlocks.Domain\ChildRights.BuildingBlocks.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

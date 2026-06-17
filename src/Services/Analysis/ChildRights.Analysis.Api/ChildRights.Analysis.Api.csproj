@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>ChildRights.Analysis.Api</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ChildRights.Analysis.Application\ChildRights.Analysis.Application.csproj" />
+    <ProjectReference Include="..\ChildRights.Analysis.Infrastructure\ChildRights.Analysis.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,182 @@
+# Child Rights Monitoring Dashboard — full demo stack.
+# Brings up PostgreSQL, RabbitMQ, all six microservices and the API gateway.
+#
+#   docker compose -f deploy/docker-compose.yml up --build
+#
+# Gateway:        http://localhost:8080
+# RabbitMQ UI:    http://localhost:15672  (guest / guest)
+
+name: childrights
+
+x-dotnet-build: &dotnet-build
+  context: ..
+  dockerfile: deploy/Dockerfile
+
+x-service-env: &service-env
+  ASPNETCORE_ENVIRONMENT: Development
+  MessageBus__Host: rabbitmq
+  MessageBus__Username: guest
+  MessageBus__Password: guest
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  education:
+    build:
+      <<: *dotnet-build
+      args:
+        PROJECT_PATH: src/Services/Education/ChildRights.Education.Api/ChildRights.Education.Api.csproj
+        PROJECT_DLL: ChildRights.Education.Api.dll
+    environment:
+      <<: *service-env
+      ConnectionStrings__Database: "Host=postgres;Port=5432;Database=childrights_education;Username=postgres;Password=postgres"
+    ports:
+      - "5101:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  social:
+    build:
+      <<: *dotnet-build
+      args:
+        PROJECT_PATH: src/Services/Social/ChildRights.Social.Api/ChildRights.Social.Api.csproj
+        PROJECT_DLL: ChildRights.Social.Api.dll
+    environment:
+      <<: *service-env
+      ConnectionStrings__Database: "Host=postgres;Port=5432;Database=childrights_social;Username=postgres;Password=postgres"
+    ports:
+      - "5102:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  medical:
+    build:
+      <<: *dotnet-build
+      args:
+        PROJECT_PATH: src/Services/Medical/ChildRights.Medical.Api/ChildRights.Medical.Api.csproj
+        PROJECT_DLL: ChildRights.Medical.Api.dll
+    environment:
+      <<: *service-env
+      ConnectionStrings__Database: "Host=postgres;Port=5432;Database=childrights_medical;Username=postgres;Password=postgres"
+    ports:
+      - "5103:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  juvenile:
+    build:
+      <<: *dotnet-build
+      args:
+        PROJECT_PATH: src/Services/JuvenilePolice/ChildRights.JuvenilePolice.Api/ChildRights.JuvenilePolice.Api.csproj
+        PROJECT_DLL: ChildRights.JuvenilePolice.Api.dll
+    environment:
+      <<: *service-env
+      ConnectionStrings__Database: "Host=postgres;Port=5432;Database=childrights_juvenile;Username=postgres;Password=postgres"
+    ports:
+      - "5104:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  analysis:
+    build:
+      <<: *dotnet-build
+      args:
+        PROJECT_PATH: src/Services/Analysis/ChildRights.Analysis.Api/ChildRights.Analysis.Api.csproj
+        PROJECT_DLL: ChildRights.Analysis.Api.dll
+    environment:
+      <<: *service-env
+      ConnectionStrings__Database: "Host=postgres;Port=5432;Database=childrights_analysis;Username=postgres;Password=postgres"
+      Services__Education: "http://education:8080"
+      # Provide an OpenAI key here to enable the LLM provider; empty = deterministic engine.
+      Ai__OpenAi__ApiKey: "${OPENAI_API_KEY:-}"
+    ports:
+      - "5105:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  notifications:
+    build:
+      <<: *dotnet-build
+      args:
+        PROJECT_PATH: src/Services/Notifications/ChildRights.Notifications.Api/ChildRights.Notifications.Api.csproj
+        PROJECT_DLL: ChildRights.Notifications.Api.dll
+    environment:
+      <<: *service-env
+      ConnectionStrings__Database: "Host=postgres;Port=5432;Database=childrights_notifications;Username=postgres;Password=postgres"
+    ports:
+      - "5106:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  gateway:
+    build:
+      <<: *dotnet-build
+      args:
+        PROJECT_PATH: src/ApiGateway/ChildRights.ApiGateway/ChildRights.ApiGateway.csproj
+        PROJECT_DLL: ChildRights.ApiGateway.dll
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ReverseProxy__Clusters__education__Destinations__primary__Address: "http://education:8080"
+      ReverseProxy__Clusters__social__Destinations__primary__Address: "http://social:8080"
+      ReverseProxy__Clusters__medical__Destinations__primary__Address: "http://medical:8080"
+      ReverseProxy__Clusters__juvenile__Destinations__primary__Address: "http://juvenile:8080"
+      ReverseProxy__Clusters__analysis__Destinations__primary__Address: "http://analysis:8080"
+      ReverseProxy__Clusters__notifications__Destinations__primary__Address: "http://notifications:8080"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - education
+      - social
+      - medical
+      - juvenile
+      - analysis
+      - notifications
+
+volumes:
+  pgdata:

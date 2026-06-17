@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>ChildRights.Education.Api</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ChildRights.Education.Application\ChildRights.Education.Application.csproj" />
+    <ProjectReference Include="..\ChildRights.Education.Infrastructure\ChildRights.Education.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,40 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/ApiGateway/">
+    <Project Path="src/ApiGateway/ChildRights.ApiGateway/ChildRights.ApiGateway.csproj" />
+  </Folder>
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/ChildRights.BuildingBlocks.Application/ChildRights.BuildingBlocks.Application.csproj" />
+    <Project Path="src/BuildingBlocks/ChildRights.BuildingBlocks.Domain/ChildRights.BuildingBlocks.Domain.csproj" />
+    <Project Path="src/BuildingBlocks/ChildRights.BuildingBlocks.Infrastructure/ChildRights.BuildingBlocks.Infrastructure.csproj" />
+    <Project Path="src/BuildingBlocks/ChildRights.Contracts/ChildRights.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/" />
+  <Folder Name="/src/Services/Analysis/">
+    <Project Path="src/Services/Analysis/ChildRights.Analysis.Api/ChildRights.Analysis.Api.csproj" />
+    <Project Path="src/Services/Analysis/ChildRights.Analysis.Application/ChildRights.Analysis.Application.csproj" />
+    <Project Path="src/Services/Analysis/ChildRights.Analysis.Domain/ChildRights.Analysis.Domain.csproj" />
+    <Project Path="src/Services/Analysis/ChildRights.Analysis.Infrastructure/ChildRights.Analysis.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Education/">
+    <Project Path="src/Services/Education/ChildRights.Education.Api/ChildRights.Education.Api.csproj" />
+    <Project Path="src/Services/Education/ChildRights.Education.Application/ChildRights.Education.Application.csproj" />
+    <Project Path="src/Services/Education/ChildRights.Education.Domain/ChildRights.Education.Domain.csproj" />
+    <Project Path="src/Services/Education/ChildRights.Education.Infrastructure/ChildRights.Education.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/JuvenilePolice/">
+    <Project Path="src/Services/JuvenilePolice/ChildRights.JuvenilePolice.Api/ChildRights.JuvenilePolice.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Medical/">
+    <Project Path="src/Services/Medical/ChildRights.Medical.Api/ChildRights.Medical.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Notifications/">
+    <Project Path="src/Services/Notifications/ChildRights.Notifications.Api/ChildRights.Notifications.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Social/">
+    <Project Path="src/Services/Social/ChildRights.Social.Api/ChildRights.Social.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ChildRights.Analysis.Domain.Tests/ChildRights.Analysis.Domain.Tests.csproj" />
+  </Folder>
+</Solution>

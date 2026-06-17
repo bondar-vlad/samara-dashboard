@@ -1,0 +1,16 @@
+# Build outputs
+bin/
+obj/
+artifacts/
+
+# Git / IDE
+.git/
+.github/
+.vs/
+.idea/
+.vscode/
+
+# Docs & misc not needed in the image
+docs/
+*.md
+LICENSE

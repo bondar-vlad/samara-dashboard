@@ -1,0 +1,18 @@
+<Project>
+
+  <!-- Shared build settings applied to every project in the solution. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <NoWarn>$(NoWarn);CS1591;ASP0014</NoWarn>
+    <Authors>Child Rights Monitoring Team</Authors>
+    <Product>Child Rights Monitoring Dashboard</Product>
+  </PropertyGroup>
+
+</Project>
