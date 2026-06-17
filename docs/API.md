@@ -47,6 +47,11 @@ e.g. `GET http://localhost:8080/education/api/students`.
 
 ## Admission — "second analysis" (`5105`)
 
+> **Auto by grade**: when `POST /api/analysis/students/{id}/run` is called **without** `kind`,
+> the pupil's grade decides — grades **≤10** get the **profile** analysis (still choosing a
+> profile), grade **11+** get the **admission** analysis (graduating, entering university).
+> Pass `?kind=Profile|Admission|All` to override.
+
 The admission analysis (`?kind=Admission` on the run endpoint) covers two widgets: the **4th
 НМТ subject** choice and the **admission direction** choice. НМТ scores and pupil choices are
 stored in the Analysis service, so the Education service is untouched. One direction groups many

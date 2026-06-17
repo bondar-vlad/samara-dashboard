@@ -12,7 +12,7 @@ public sealed record RunStudentAnalysisCommand(
     Guid StudentId,
     AnalysisTrigger Trigger = AnalysisTrigger.OnDemand,
     string? ModelName = null,
-    AnalysisKind Kind = AnalysisKind.Profile) : ICommand<AnalysisRunResultDto>;
+    AnalysisKind? Kind = null) : ICommand<AnalysisRunResultDto>;
 
 internal sealed class RunStudentAnalysisCommandHandler(IAnalysisEngine engine)
     : ICommandHandler<RunStudentAnalysisCommand, AnalysisRunResultDto>

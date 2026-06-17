@@ -142,4 +142,19 @@ public sealed class StudentRiskRulesTests
 
         Assert.DoesNotContain(evaluation.Flags, f => f.RuleCode == "EDU-PROFILE-MISMATCH");
     }
+
+    [Fact]
+    public void Graduating_pupil_gets_no_profile_recommendation()
+    {
+        // Grade 11 pupils are leaving for university; profile choice is no longer applicable.
+        var evaluation = StudentRiskRules.Evaluate(Snapshot(
+            gradeLevel: 11,
+            desiredProfiles: [EducationProfile.SocialHumanitarian],
+            subjectAverages: new Dictionary<string, double> { ["Біологія"] = 12, ["Хімія"] = 11 },
+            topicAverages: [new TopicScore("Біологія", "Генетика", 12)]));
+
+        Assert.DoesNotContain(evaluation.Recommendations,
+            r => r.Kind is RecommendationKind.ProfileChoice or RecommendationKind.ProfileChange);
+        Assert.DoesNotContain(evaluation.Flags, f => f.RuleCode == "EDU-PROFILE-MISMATCH");
+    }
 }

@@ -14,6 +14,12 @@ public static class StudentRiskRules
     public const int OrangeAbsences = 10;
     public const int RedAbsences = 20;
 
+    /// <summary>
+    /// The graduating grade. From this grade up a pupil is preparing to enter university
+    /// (admission analysis) rather than choosing/adjusting a school profile.
+    /// </summary>
+    public const int GraduatingGradeLevel = 11;
+
     public static RuleEvaluation Evaluate(StudentSnapshot snapshot)
     {
         var flags = new List<FlagFinding>();
@@ -21,7 +27,13 @@ public static class StudentRiskRules
 
         EvaluateAttendance(snapshot, flags);
         EvaluateAcademicRisk(snapshot, flags);
-        EvaluateProfiling(snapshot, flags, recommendations);
+
+        // Profile choice only applies while the pupil still studies (grades ≤ 10). Graduating
+        // pupils (11+) are handled by the admission analysis instead.
+        if (snapshot.GradeLevel < GraduatingGradeLevel)
+        {
+            EvaluateProfiling(snapshot, flags, recommendations);
+        }
 
         return new RuleEvaluation(flags, recommendations);
     }

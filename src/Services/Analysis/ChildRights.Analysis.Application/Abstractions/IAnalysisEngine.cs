@@ -15,6 +15,6 @@ public interface IAnalysisEngine
         Guid studentId,
         AnalysisTrigger trigger,
         string? modelName = null,
-        AnalysisKind kind = AnalysisKind.Profile,
+        AnalysisKind? kind = null,
         CancellationToken cancellationToken = default);
 }

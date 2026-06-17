@@ -20,14 +20,15 @@ public sealed class AnalysisController(IDispatcher dispatcher, IAiAnalysisProvid
     public IActionResult GetModels() => Ok(providerFactory.AvailableModels);
 
     /// <summary>
-    /// Runs an on-demand analysis for a single pupil. <paramref name="kind"/> selects the
-    /// analysis: <c>Profile</c> (default), <c>Admission</c> (4th НМТ subject + direction), or <c>All</c>.
+    /// Runs an on-demand analysis for a single pupil. When <paramref name="kind"/> is omitted the
+    /// pupil's grade decides: grades ≤10 get the profile analysis, grade 11+ get the admission
+    /// analysis (4th НМТ subject + direction). Pass <c>kind</c> to override (Profile / Admission / All).
     /// </summary>
     [HttpPost("students/{studentId:guid}/run")]
     public async Task<IActionResult> RunStudent(
         Guid studentId,
         [FromQuery] string? model,
-        [FromQuery] AnalysisKind kind = AnalysisKind.Profile,
+        [FromQuery] AnalysisKind? kind = null,
         CancellationToken cancellationToken = default)
         => ToResult(await Dispatcher.Send(
             new RunStudentAnalysisCommand(studentId, AnalysisTrigger.OnDemand, model, kind), cancellationToken));

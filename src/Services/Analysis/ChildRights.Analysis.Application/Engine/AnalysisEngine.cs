@@ -24,7 +24,7 @@ internal sealed class AnalysisEngine(
         Guid studentId,
         AnalysisTrigger trigger,
         string? modelName = null,
-        AnalysisKind kind = AnalysisKind.Profile,
+        AnalysisKind? kind = null,
         CancellationToken cancellationToken = default)
     {
         var provider = providerFactory.Resolve(modelName);
@@ -43,6 +43,12 @@ internal sealed class AnalysisEngine(
                 await context.SaveChangesAsync(cancellationToken);
                 return EmptyResult(run, provider.ModelName);
             }
+
+            // When the caller does not specify a kind, the pupil's stage decides it:
+            //   • graduating year (11+) → admission analysis (НМТ + direction) — they are leaving
+            //     for university, no longer choosing a school profile;
+            //   • earlier years (≤10)  → profile analysis — they still study and pick/adjust a profile.
+            var effectiveKind = ResolveKind(kind, profile.GradeLevel);
 
             var declaredProfile = ProfileTaxonomy.TryParse(profile.ProfileChoice.DeclaredProfile);
             var desiredProfiles = profile.ProfileChoice.DesiredProfiles
@@ -78,7 +84,7 @@ internal sealed class AnalysisEngine(
                 r.Kind, r.Title, r.Summary, r.Rationale, r.Confidence, provider.ModelName, clock.UtcNow);
 
             // Pass 1 — profile-education analysis (the original behaviour, the default).
-            if (kind is AnalysisKind.Profile or AnalysisKind.All)
+            if (effectiveKind is AnalysisKind.Profile or AnalysisKind.All)
             {
                 profileResult = await provider.AnalyzeAsync(new AnalysisRequest(snapshot), cancellationToken);
                 allFlags.AddRange(profileResult.Flags.Select(MapFlag));
@@ -87,7 +93,7 @@ internal sealed class AnalysisEngine(
             }
 
             // Pass 2 — admission analysis (4th НМТ subject + admission direction).
-            if (kind is AnalysisKind.Admission or AnalysisKind.All)
+            if (effectiveKind is AnalysisKind.Admission or AnalysisKind.All)
             {
                 var choice = await context.StudentAdmissionChoices
                     .FirstOrDefaultAsync(c => c.StudentId == studentId, cancellationToken);
@@ -123,7 +129,7 @@ internal sealed class AnalysisEngine(
 
             logger.LogInformation(
                 "Analysis run {RunId} ({Kind}) for student {StudentId} via {Model}: {Flags} flags, {Recs} recommendations.",
-                run.Id, kind, studentId, provider.ModelName, allFlags.Count, allRecommendations.Count);
+                run.Id, effectiveKind, studentId, provider.ModelName, allFlags.Count, allRecommendations.Count);
 
             return new AnalysisRunResultDto(
                 run.Id, provider.ModelName, run.Status.ToString(),
@@ -251,4 +257,14 @@ internal sealed class AnalysisEngine(
 
     private static AnalysisRunResultDto EmptyResult(AnalysisRun run, string modelName) =>
         new(run.Id, modelName, run.Status.ToString(), 0, 0, run.Summary, [], []);
+
+    /// <summary>
+    /// Resolves the analysis kind. An explicit request is always respected; otherwise the
+    /// pupil's grade decides — graduating pupils (11+) get admission analysis, the rest get
+    /// profile analysis. This is what keeps grades 9–10 and grade 11 on separate tracks.
+    /// </summary>
+    private static AnalysisKind ResolveKind(AnalysisKind? requested, int gradeLevel) =>
+        requested ?? (gradeLevel >= StudentRiskRules.GraduatingGradeLevel
+            ? AnalysisKind.Admission
+            : AnalysisKind.Profile);
 }
