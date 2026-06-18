@@ -45,20 +45,25 @@ e.g. `GET http://localhost:8080/education/api/students`.
 | GET    | `/api/recommendations`                         | List recommendations (`?scope=&subjectId=`). |
 | GET    | `/api/dashboard/summary`                       | Dashboard KPIs.                          |
 
-## Admission — "second analysis" (`5105`)
+## Profile choice — 10th grade (`5105`)
 
-> **Auto by grade**: when `POST /api/analysis/students/{id}/run` is called **without** `kind`,
-> the pupil's grade decides — grades **≤10** get the **profile** analysis (still choosing a
-> profile), grade **11+** get the **admission** analysis (graduating, entering university).
-> Pass `?kind=Profile|Admission|All` to override.
->
-> Each `kind` expands to a set of **focused per-goal analyses** — every goal (`StudentRisk`,
-> `ProfileChoice`, `NmtFourthSubject`, `AdmissionDirection`) is run independently with its own
-> AI instruction and its own red flags (see ARCHITECTURE.md §6). Risk flags are raised for
-> every pupil regardless of `kind`.
+> The **profile** decision: which reform **cluster / profile** a pupil chooses when entering the
+> profile high school (grades 10–12). It applies to pupils **below the graduating year** (grade
+> `< 11`). The recommended cluster is computed on the fly from the pupil's topic/subject grades,
+> so these endpoints work without a stored analysis run. The pupil's *desired* cluster is owned by
+> the Education service (`/api/students` → `desiredCluster`).
+
+| Method | Route                                              | Purpose                                                              |
+| ------ | -------------------------------------------------- | ------------------------------------------------------------------- |
+| GET    | `/api/profile/schools/{schoolId}/students`         | **Widget 3**: profile-choosing pupils (grade `< 11`) with desired vs recommended cluster + per-cluster distribution. |
+| GET    | `/api/profile/students/{studentId}`                | **Widget 3**: one pupil's profile analysis (ranked clusters + recommended profiles + rationale). |
+
+## Admission (НМТ) — 11th grade graduation (`5105`)
 
 The admission analysis (`?kind=Admission` on the run endpoint) covers two widgets: the **4th
-НМТ subject** choice and the **admission direction** choice. НМТ scores and pupil choices are
+НМТ subject** choice and the **admission direction** choice. It applies only to **graduating**
+pupils (grade `>= 11`) — the school-level lists filter younger pupils out, keeping the profile
+decision (above) and the admission decision cleanly separated. НМТ scores and pupil choices are
 stored in the Analysis service, so the Education service is untouched. One direction groups many
 specialties (1-to-many).
 
@@ -67,10 +72,10 @@ specialties (1-to-many).
 | GET    | `/api/admission/nmt-subjects`                               | List НМТ subjects (mandatory + 4th-subject options). |
 | GET    | `/api/admission/directions`                                 | List admission directions + specialties + НМТ coefficients (`?cluster=`). |
 | PUT    | `/api/admission/students/{id}/choice`                       | Submit НМТ scores / chosen 4th subject / desired direction (any subset). |
-| GET    | `/api/admission/students/{id}/fourth-subject`               | **Widget 1**: recommended 4th subject vs the pupil's choice (match / not-match). |
-| GET    | `/api/admission/schools/{schoolId}/fourth-subject-students` | **Widget 1**: pupils list with chosen vs recommended 4th subject. |
-| GET    | `/api/admission/students/{id}/direction`                    | **Widget 2**: recommended direction (НМТ coefficients + topics) vs the pupil's choice. |
-| GET    | `/api/admission/schools/{schoolId}/direction-students`      | **Widget 2**: pupils list with chosen vs recommended direction. |
+| GET    | `/api/admission/students/{id}/fourth-subject`               | **Widget 2**: recommended 4th subject vs the pupil's choice (match / not-match). |
+| GET    | `/api/admission/schools/{schoolId}/fourth-subject-students` | **Widget 2**: graduating pupils with chosen vs recommended 4th subject. |
+| GET    | `/api/admission/students/{id}/direction`                    | **Widget 1**: recommended direction (НМТ coefficients + topics) vs the pupil's choice. |
+| GET    | `/api/admission/schools/{schoolId}/direction-students`      | **Widget 1**: graduating pupils with chosen vs recommended direction. |
 
 ## Universities (`5105`)
 

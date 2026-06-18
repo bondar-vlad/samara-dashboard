@@ -277,3 +277,53 @@ export interface SchoolDirections {
   students: DirectionStudent[];
   distribution: DirectionDistribution[];
 }
+
+// ─── 10th-grade profile choice (cluster) ─────────────────────────────────────
+
+/** A pupil row in the profile-choice list: desired vs recommended reform cluster. */
+export interface ProfileChoiceStudent {
+  studentId: string;
+  fullName: string;
+  className: string;
+  desiredCluster: string | null;
+  desiredClusterName: string | null;
+  recommendedCluster: string | null;
+  recommendedClusterName: string | null;
+  hasChoice: boolean;
+  isMatch: boolean;
+}
+
+export interface ProfileChoiceDistribution {
+  cluster: string;
+  clusterName: string;
+  chosenCount: number;
+  recommendedCount: number;
+}
+
+/** GET /analysis/api/profile/schools/{id}/students */
+export interface SchoolProfileChoices {
+  students: ProfileChoiceStudent[];
+  distribution: ProfileChoiceDistribution[];
+}
+
+export interface ClusterScore {
+  cluster: string;
+  clusterName: string;
+  score: number;
+}
+
+/** GET /analysis/api/profile/students/{id} */
+export interface StudentProfileChoice {
+  studentId: string;
+  desiredCluster: string | null;
+  desiredClusterName: string | null;
+  desiredProfiles: ProfileRef[];
+  recommendedCluster: string | null;
+  recommendedClusterName: string | null;
+  recommendedProfiles: ProfileRef[];
+  hasChoice: boolean;
+  isMatch: boolean;
+  confidence: number | null;
+  ranked: ClusterScore[];
+  rationale: string;
+}

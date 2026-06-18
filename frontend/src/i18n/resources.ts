@@ -28,9 +28,18 @@ const uk: Dict = {
     studentAnalysis: "Аналіз профілю учня",
     directionAnalysis: "Аналіз напряму (профілю)",
     fourthSubjectAnalysis: "Аналіз четвертого предмета НМТ",
+    profileChoiceAnalysis: "Аналіз вибору профілю (10 клас)",
     demoTitle: "Демо: освіта та ринок праці",
     demoSource: "Дані з відкритих джерел",
     language: "Мова",
+  },
+  home: {
+    section10Title: "10 клас: вибір профілю навчання",
+    section10Sub:
+      "Профільна школа — який профіль (кластер) обирає учень проти рекомендації системи за результатами навчання.",
+    section11Title: "Випуск 11 класу: вступ до ВНЗ за НМТ",
+    section11Sub:
+      "НМТ складають після 11 класу — напрям вступу та четвертий предмет: вибір учня проти рекомендації системи.",
   },
   common: {
     seriesChosen: "Вибір учнів",
@@ -48,6 +57,8 @@ const uk: Dict = {
     status: "Статус",
     notChosen: "Не обрано",
     mismatch: "Розбіжність",
+    rowsPerPage: "Рядків на сторінці:",
+    displayedRows: "{{from}}–{{to}} з {{count}}",
   },
   direction: {
     loadError: "Не вдалося завантажити дані про напрям (профіль).",
@@ -103,6 +114,30 @@ const uk: Dict = {
     basedOnGrades: "На основі оцінок",
     rankingTitle: "Рейтинг предметів на вибір",
     evidenceCount: "{{count}} оцінок",
+  },
+  profileChoice: {
+    loadError: "Не вдалося завантажити дані про вибір профілю.",
+    chartTitle: "Вибір профілю навчання (10 клас)",
+    chartSub:
+      "Кількість учнів за кластером профілю — вибір учнів проти рекомендації системи",
+    studentsTitle: "Учні за профілем",
+    clickHint: "Натисніть на учня, щоб відкрити детальний аналіз профілю.",
+    cardTitle: "Аналіз вибору профілю (10 клас)",
+    cardSub: "Рекомендований кластер визначається за профільними темами та оцінками учня",
+    analysisLoadError: "Не вдалося завантажити аналіз профілю.",
+    studentChoice: "Вибір учня",
+    chosenCluster: "Обраний кластер",
+    notChosenYet: "Ще не обрано",
+    systemRec: "Рекомендація системи",
+    byGradesAndTopics: "За темами та оцінками",
+    confidence: "Впевненість {{pct}}%",
+    bannerNotChosen:
+      "Учень ще не обрав профіль. Рекомендація системи може допомогти у виборі.",
+    bannerMismatch:
+      "Вибір учня не збігається з рекомендацією системи — варто обговорити.",
+    bannerMatch: "Вибір учня збігається з рекомендацією системи.",
+    howComputed: "Як рахувалось",
+    rankingTitle: "Рейтинг кластерів",
   },
   dashboard: {
     desiredLegend: "Бажання учнів (анкетування)",
@@ -239,9 +274,18 @@ const en: Dict = {
     studentAnalysis: "Student profile analysis",
     directionAnalysis: "Direction (profile) analysis",
     fourthSubjectAnalysis: "NMT fourth-subject analysis",
+    profileChoiceAnalysis: "Profile choice analysis (10th grade)",
     demoTitle: "Demo: education & labor market",
     demoSource: "Open-source data",
     language: "Language",
+  },
+  home: {
+    section10Title: "10th grade: choosing a study profile",
+    section10Sub:
+      "Profile high school — which profile (cluster) a pupil picks versus the system's recommendation from their results.",
+    section11Title: "11th-grade graduation: university admission by NMT",
+    section11Sub:
+      "NMT is taken after 11th grade — admission direction and the fourth subject: the pupil's choice versus the recommendation.",
   },
   common: {
     seriesChosen: "Students' choice",
@@ -259,6 +303,8 @@ const en: Dict = {
     status: "Status",
     notChosen: "Not chosen",
     mismatch: "Mismatch",
+    rowsPerPage: "Rows per page:",
+    displayedRows: "{{from}}–{{to}} of {{count}}",
   },
   direction: {
     loadError: "Failed to load direction (profile) data.",
@@ -314,6 +360,30 @@ const en: Dict = {
     basedOnGrades: "Based on grades",
     rankingTitle: "Elective subjects ranking",
     evidenceCount: "{{count}} grades",
+  },
+  profileChoice: {
+    loadError: "Failed to load profile-choice data.",
+    chartTitle: "Study profile choice (10th grade)",
+    chartSub:
+      "Number of students by profile cluster — students' choice vs system recommendation",
+    studentsTitle: "Students by profile",
+    clickHint: "Click a student to open the detailed profile analysis.",
+    cardTitle: "Profile choice analysis (10th grade)",
+    cardSub: "The recommended cluster is computed from the pupil's core topics and grades",
+    analysisLoadError: "Failed to load the profile analysis.",
+    studentChoice: "Student's choice",
+    chosenCluster: "Chosen cluster",
+    notChosenYet: "Not chosen yet",
+    systemRec: "System recommendation",
+    byGradesAndTopics: "By topics and grades",
+    confidence: "Confidence {{pct}}%",
+    bannerNotChosen:
+      "The student hasn't chosen a profile yet. The system recommendation can help.",
+    bannerMismatch:
+      "The student's choice differs from the recommendation — worth discussing.",
+    bannerMatch: "The student's choice matches the system recommendation.",
+    howComputed: "How it was computed",
+    rankingTitle: "Cluster ranking",
   },
   dashboard: {
     desiredLegend: "Students' wishes (survey)",

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import {
   useQuery,
   useMutation,
@@ -12,6 +13,34 @@ export function useStudents() {
     queryKey: ["students"],
     queryFn: api.listStudents,
   });
+}
+
+/**
+ * Picks one stable demo school for the dashboards. Prefers a school that spans both the
+ * profile cohort (grade < 11) and the admission cohort (grade 11), so all three widgets have
+ * data; ties are broken by size then id, which lands on the Academic Lyceum (grades 9–11).
+ */
+export function usePrimarySchoolId(): string | undefined {
+  const students = useStudents();
+  return useMemo(() => {
+    const rows = students.data ?? [];
+    if (rows.length === 0) return undefined;
+
+    const bySchool = new Map<string, { total: number; hasGrad: boolean; hasJunior: boolean }>();
+    for (const s of rows) {
+      const e = bySchool.get(s.schoolId) ?? { total: 0, hasGrad: false, hasJunior: false };
+      e.total += 1;
+      if (s.gradeLevel >= 11) e.hasGrad = true;
+      else e.hasJunior = true;
+      bySchool.set(s.schoolId, e);
+    }
+
+    const entries = [...bySchool.entries()];
+    const dual = entries.filter(([, e]) => e.hasGrad && e.hasJunior);
+    const pool = dual.length > 0 ? dual : entries;
+    pool.sort((a, b) => b[1].total - a[1].total || (a[0] < b[0] ? -1 : 1));
+    return pool[0][0];
+  }, [students.data]);
 }
 
 export function useReformReference() {
@@ -102,6 +131,24 @@ export function useStudentDirection(id: string | null) {
   return useQuery({
     queryKey: ["direction", id],
     queryFn: () => api.getStudentDirection(id as string),
+    enabled: !!id,
+  });
+}
+
+// ─── 10th-grade profile choice (reform cluster) ─────────────────────────────
+
+export function useSchoolProfileChoices(schoolId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["profile-choice-school", schoolId],
+    queryFn: () => api.getSchoolProfileChoices(schoolId as string),
+    enabled: !!schoolId,
+  });
+}
+
+export function useStudentProfileChoice(id: string | null) {
+  return useQuery({
+    queryKey: ["profile-choice", id],
+    queryFn: () => api.getStudentProfileChoice(id as string),
     enabled: !!id,
   });
 }

@@ -34,6 +34,10 @@ public static class DependencyInjection
                 client.BaseAddress = new Uri(educationBaseUrl))
             .AddStandardResilienceHandler();
 
+        // Demo admission choices depend on both the direction catalogue (above) and the Education
+        // roster (the typed client above), so this seeder is registered last.
+        services.AddScoped<IDataSeeder, AdmissionChoiceSeeder>();
+
         // The deterministic engine is always available.
         services.AddSingleton<IAiAnalysisProvider, RuleBasedAiAnalysisProvider>();
 
@@ -51,6 +55,7 @@ public static class DependencyInjection
 
         services.AddSingleton<IAiAnalysisProviderFactory, AiAnalysisProviderFactory>();
 
+        services.AddHostedService<AnalysisBootstrapper>();
         services.AddHostedService<ScheduledAnalysisService>();
 
         return services;

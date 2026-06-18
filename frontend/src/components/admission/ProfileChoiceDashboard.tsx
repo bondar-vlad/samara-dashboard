@@ -26,7 +26,7 @@ import GroupedBarChart, {
   type GroupedDatum,
   type SeriesDef,
 } from "@/components/charts/GroupedBarChart";
-import { usePrimarySchoolId, useNmtSubjects, useSchoolFourthSubjects } from "@/lib/hooks";
+import { useSchoolProfileChoices, usePrimarySchoolId } from "@/lib/hooks";
 import { SERIES_DESIRED, SERIES_RECOMMENDED, YELLOW, GREEN } from "@/theme/colors";
 import { useTranslation } from "@/i18n/I18nProvider";
 
@@ -45,12 +45,12 @@ function Legend({ series }: { series: SeriesDef[] }) {
   );
 }
 
-export default function FourthSubjectDashboard() {
+export default function ProfileChoiceDashboard() {
   const router = useRouter();
   const { t } = useTranslation();
   const schoolId = usePrimarySchoolId();
-  const nmt = useNmtSubjects();
-  const school = useSchoolFourthSubjects(schoolId);
+  const school = useSchoolProfileChoices(schoolId);
+
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -62,26 +62,21 @@ export default function FourthSubjectDashboard() {
     [t],
   );
 
-  const nameOf = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const s of nmt.data ?? []) map.set(s.subject, s.name);
-    return (subject: string | null) => (subject ? map.get(subject) ?? subject : "—");
-  }, [nmt.data]);
-
-  // Chart: chosen vs recommended count per fourth-subject option (skip empty).
+  // Chart: desired vs recommended count per reform cluster (skip empty clusters).
   const chartData: GroupedDatum[] = useMemo(() => {
     return (school.data?.distribution ?? [])
       .filter((d) => d.chosenCount > 0 || d.recommendedCount > 0)
       .map((d) => ({
-        label: d.subjectName,
+        label: d.clusterName,
         values: { chosen: d.chosenCount, recommended: d.recommendedCount },
       }));
   }, [school.data]);
 
-  const rows = school.data?.students ?? [];
-  const notChosen = rows.filter((s) => !s.chosenSubject).length;
-  const mismatches = rows.filter((s) => s.chosenSubject && !s.isMatch).length;
+  const rows = useMemo(() => school.data?.students ?? [], [school.data]);
+  const notChosen = rows.filter((s) => !s.hasChoice).length;
+  const mismatches = rows.filter((s) => s.hasChoice && !s.isMatch).length;
 
+  // Keep the current page in range when the dataset shrinks (no effect = no cascading renders).
   const pageCount = Math.max(1, Math.ceil(rows.length / rowsPerPage));
   const safePage = Math.min(page, pageCount - 1);
   const pagedRows = rows.slice(safePage * rowsPerPage, safePage * rowsPerPage + rowsPerPage);
@@ -94,15 +89,15 @@ export default function FourthSubjectDashboard() {
     );
   }
   if (school.isError) {
-    return <Alert severity="error">{t("fourthSubject.loadError")}</Alert>;
+    return <Alert severity="error">{t("profileChoice.loadError")}</Alert>;
   }
 
   return (
     <Stack spacing={3}>
       <ChartFrame
-        title={t("fourthSubject.chartTitle")}
-        subheader={t("fourthSubject.chartSub")}
-        filename="nmt-fourth-subject"
+        title={t("profileChoice.chartTitle")}
+        subheader={t("profileChoice.chartSub")}
+        filename="profile-choice"
       >
         <Legend series={series} />
         {chartData.length > 0 ? (
@@ -120,13 +115,13 @@ export default function FourthSubjectDashboard() {
           useFlexGap
         >
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            {t("fourthSubject.studentsTitle")}
+            {t("profileChoice.studentsTitle")}
           </Typography>
           <Chip size="small" label={t("common.notChosenCount", { count: notChosen })} variant="outlined" />
           <Chip size="small" color="warning" variant="outlined" label={t("common.mismatchesCount", { count: mismatches })} />
         </Stack>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {t("fourthSubject.clickHint")}
+          {t("profileChoice.clickHint")}
         </Typography>
 
         <Card variant="outlined">
@@ -143,20 +138,20 @@ export default function FourthSubjectDashboard() {
               </TableHead>
               <TableBody>
                 {pagedRows.map((s) => {
-                  const mismatch = !!s.chosenSubject && !s.isMatch;
+                  const mismatch = s.hasChoice && !s.isMatch;
                   return (
                     <TableRow
                       key={s.studentId}
                       hover
-                      onClick={() => router.push(`/admission/students/${s.studentId}`)}
+                      onClick={() => router.push(`/profile/students/${s.studentId}`)}
                       sx={{ cursor: "pointer", bgcolor: mismatch ? `${YELLOW}14` : undefined }}
                     >
                       <TableCell sx={{ fontWeight: 600 }}>{s.fullName}</TableCell>
                       <TableCell>{s.className}</TableCell>
-                      <TableCell>{s.chosenSubject ? nameOf(s.chosenSubject) : "—"}</TableCell>
-                      <TableCell>{nameOf(s.recommendedSubject)}</TableCell>
+                      <TableCell>{s.desiredClusterName ?? "—"}</TableCell>
+                      <TableCell>{s.recommendedClusterName ?? "—"}</TableCell>
                       <TableCell align="center">
-                        {!s.chosenSubject ? (
+                        {!s.hasChoice ? (
                           <Chip size="small" label={t("table.notChosen")} variant="outlined" />
                         ) : mismatch ? (
                           <Chip

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -16,6 +16,7 @@ import {
   TableRow,
   TableCell,
   TableContainer,
+  TablePagination,
   Paper,
 } from "@mui/material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
@@ -25,7 +26,7 @@ import GroupedBarChart, {
   type GroupedDatum,
   type SeriesDef,
 } from "@/components/charts/GroupedBarChart";
-import { useStudents, useAdmissionDirections, useSchoolDirections } from "@/lib/hooks";
+import { usePrimarySchoolId, useAdmissionDirections, useSchoolDirections } from "@/lib/hooks";
 import { SERIES_DESIRED, SERIES_RECOMMENDED, YELLOW, GREEN } from "@/theme/colors";
 import { useTranslation } from "@/i18n/I18nProvider";
 
@@ -47,10 +48,11 @@ function Legend({ series }: { series: SeriesDef[] }) {
 export default function DirectionDashboard() {
   const router = useRouter();
   const { t } = useTranslation();
-  const students = useStudents();
+  const schoolId = usePrimarySchoolId();
   const directions = useAdmissionDirections();
-  const schoolId = students.data?.[0]?.schoolId;
   const school = useSchoolDirections(schoolId);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const series: SeriesDef[] = useMemo(
     () => [
@@ -79,14 +81,18 @@ export default function DirectionDashboard() {
   const notChosen = rows.filter((s) => !s.desiredDirectionCode).length;
   const mismatches = rows.filter((s) => s.desiredDirectionCode && !s.isMatch).length;
 
-  if (students.isLoading || school.isLoading) {
+  const pageCount = Math.max(1, Math.ceil(rows.length / rowsPerPage));
+  const safePage = Math.min(page, pageCount - 1);
+  const pagedRows = rows.slice(safePage * rowsPerPage, safePage * rowsPerPage + rowsPerPage);
+
+  if (school.isLoading || !schoolId) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
         <CircularProgress />
       </Box>
     );
   }
-  if (students.isError || school.isError) {
+  if (school.isError) {
     return <Alert severity="error">{t("direction.loadError")}</Alert>;
   }
 
@@ -135,7 +141,7 @@ export default function DirectionDashboard() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.map((s) => {
+                {pagedRows.map((s) => {
                   const mismatch = !!s.desiredDirectionCode && !s.isMatch;
                   return (
                     <TableRow
@@ -171,6 +177,22 @@ export default function DirectionDashboard() {
               </TableBody>
             </Table>
           </TableContainer>
+          <TablePagination
+            component="div"
+            count={rows.length}
+            page={safePage}
+            onPageChange={(_e, p) => setPage(p)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+            rowsPerPageOptions={[10, 25, 50]}
+            labelRowsPerPage={t("table.rowsPerPage")}
+            labelDisplayedRows={({ from, to, count }) =>
+              t("table.displayedRows", { from, to, count })
+            }
+          />
         </Card>
       </Box>
     </Stack>

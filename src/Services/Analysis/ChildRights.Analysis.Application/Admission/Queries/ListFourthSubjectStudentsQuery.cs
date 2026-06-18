@@ -28,7 +28,11 @@ internal sealed class ListFourthSubjectStudentsQueryHandler(
         ListFourthSubjectStudentsQuery query,
         CancellationToken cancellationToken)
     {
-        var students = await educationClient.GetStudentsAsync(query.SchoolId, cancellationToken);
+        // Admission (НМТ) concerns only graduating pupils (11th grade); younger pupils are still
+        // in the profile-choice stage and must not appear in this widget.
+        var students = (await educationClient.GetStudentsAsync(query.SchoolId, cancellationToken))
+            .Where(s => s.GradeLevel >= StudentRiskRules.GraduatingGradeLevel)
+            .ToList();
         var choices = await context.StudentAdmissionChoices
             .Where(c => c.SchoolId == query.SchoolId)
             .ToDictionaryAsync(c => c.StudentId, c => c, cancellationToken);

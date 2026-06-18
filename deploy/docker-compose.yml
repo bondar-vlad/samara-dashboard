@@ -136,6 +136,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      education:
+        condition: service_started
 
   notifications:
     build:

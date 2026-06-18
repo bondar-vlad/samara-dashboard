@@ -12,6 +12,8 @@ import type {
   AdmissionDirection,
   SchoolDirections,
   StudentDirection,
+  SchoolProfileChoices,
+  StudentProfileChoice,
 } from "./types";
 
 /**
@@ -85,4 +87,11 @@ export const api = {
 
   getStudentDirection: (id: string) =>
     getJson<StudentDirection>(`${ANL}/admission/students/${id}/direction`),
+
+  // 10th-grade profile choice (reform cluster)
+  getSchoolProfileChoices: (schoolId: string) =>
+    getJson<SchoolProfileChoices>(`${ANL}/profile/schools/${schoolId}/students`),
+
+  getStudentProfileChoice: (id: string) =>
+    getJson<StudentProfileChoice>(`${ANL}/profile/students/${id}`),
 };

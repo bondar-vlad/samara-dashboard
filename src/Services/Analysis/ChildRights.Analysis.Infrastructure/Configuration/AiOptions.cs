@@ -17,6 +17,14 @@ public sealed class AiOptions
     /// <summary>Optional school to target during scheduled sweeps; null = all pupils.</summary>
     public Guid? ScheduledSchoolId { get; set; }
 
+    /// <summary>
+    /// When true (default), the service runs a one-time analysis sweep of every pupil at startup,
+    /// so risks (red flags) and recommendations are detected <b>automatically</b> as soon as the
+    /// data is available — without waiting for an incoming event or a manual run. It is guarded by
+    /// the existing analysis runs, so it executes only once on a fresh database.
+    /// </summary>
+    public bool BootstrapAnalysisOnStartup { get; set; } = true;
+
     public OpenAiOptions OpenAi { get; set; } = new();
 }
 
