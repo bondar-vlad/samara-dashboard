@@ -5,7 +5,6 @@ paginate: true
 html: true
 title: Моніторинг ризиків прав дитини — Challenge 1
 author: Команда Samara
-backgroundColor: "#C6D8F7"
 style: |
   @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap');
 
@@ -77,11 +76,13 @@ style: |
 
   section.lead { display: flex; flex-direction: column; justify-content: center; }
   section.lead h1 { font-size: 70px; }
-  section.dark { background: var(--ink); color: var(--blue); }
+  section.dark { background: var(--ink) !important; color: var(--blue); }
   section.dark h1, section.dark h2 { color: #fff; }
   section.dark h2::after { background: var(--yellow); }
   section.dark .muted { color: rgba(255,255,255,0.6); }
+  section.dark code { background: rgba(255,255,255,0.12); color: #fff; }
   section.dark .box { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.5); color: #fff; }
+  section.dark .box small { color: rgba(255,255,255,0.6); }
 ---
 
 <!-- _class: lead -->
