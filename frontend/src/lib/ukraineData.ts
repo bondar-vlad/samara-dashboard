@@ -47,6 +47,113 @@ export const NOT_BY_SPECIALTY_RANGE = {
   note: "Оцінки коливаються від ~40% (мінімум) до ~80% (максимум) — єдиної держстатистики немає (Український тиждень).",
 };
 
+/* ------------------------------------------------------------------------- *
+ * Counterfactual "with our system" scenarios (ESTIMATE — NOT a forecast)
+ * ------------------------------------------------------------------------- *
+ * If a career-guidance system launches, a share `adoption` of the pupils who
+ * would otherwise make the WRONG choice instead end up working in the field
+ * they studied for, so the off-specialty share starts to FALL instead of
+ * climbing toward the ~85% do-nothing saturation.
+ *
+ * Recurrence, applied from the last MEASURED off-specialty point onward:
+ *
+ *     sₜ = floor + (sₜ₋₁ − floor) · (1 − cohortRenewal · adoption)
+ *
+ *   • floor          — structural minimum off-specialty share that no guidance
+ *                      can remove (people change interests, the labour market
+ *                      shifts). An ESTIMATE.
+ *   • cohortRenewal  — share of the "recent-graduate" stock (the cohort that
+ *                      drives the headline survey figure) replaced by freshly
+ *                      guided graduates each year; only that fresh slice can be
+ *                      corrected annually.
+ *   • adoption       — share of wrong-choosers who actually follow the advice
+ *                      (the 10% / 20% / 50% scenarios).
+ *
+ * Every number here is an ESTIMATE for illustration, not a validated forecast.
+ */
+export const COUNTERFACTUAL = {
+  launchYear: 2024,
+  horizonYear: 2030,
+  /** % — structural minimum off-specialty share (estimate). */
+  floor: 30,
+  /** Share of the recent-graduate stock renewed (and reachable) per year. */
+  cohortRenewal: 0.12,
+  /** Modelled "listened to advice" levels. */
+  adoptionLevels: [0.1, 0.2, 0.5],
+  note: "ОЦІНКА для ілюстрації, а не валідований прогноз. Модель: sₜ = floor + (sₜ₋₁ − floor)·(1 − cohortRenewal·adoption), старт від останньої виміряної точки «не за фахом».",
+};
+
+const measuredOffSpecHistory: YearPoint[] = NOT_BY_SPECIALTY.filter(
+  (d) => d.kind === "measured",
+);
+
+/** Last measured off-specialty point — the branch shared by every scenario. */
+const lastMeasuredOffSpec = measuredOffSpecHistory.at(-1)!; // 2023 → 80%
+/** Do-nothing saturation level taken from the existing AI projection. */
+const offSpecSaturation = NOT_BY_SPECIALTY.at(-1)!.value; // 2026 → 85%
+
+/**
+ * Do-nothing baseline extended to the scenario horizon: the measured history,
+ * the existing AI projection (2024–2026), then held at the ~85% saturation.
+ */
+export const DO_NOTHING_FORECAST: YearPoint[] = (() => {
+  const out: YearPoint[] = [...measuredOffSpecHistory];
+  for (
+    let year = COUNTERFACTUAL.launchYear;
+    year <= COUNTERFACTUAL.horizonYear;
+    year++
+  ) {
+    const existing = NOT_BY_SPECIALTY.find((d) => d.year === year);
+    out.push(
+      existing ?? {
+        year,
+        value: offSpecSaturation,
+        kind: "estimated",
+        note: "AI-прогноз (насичення ~85%)",
+      },
+    );
+  }
+  return out;
+})();
+
+export interface ScenarioSeries {
+  /** Adoption level (0..1): share of wrong-choosers who follow the advice. */
+  adoption: number;
+  /** Whole-percent adoption label, e.g. 10 / 20 / 50. */
+  adoptionPct: number;
+  /** Projected tail incl. the shared branch point, for a continuous line. */
+  points: YearPoint[];
+}
+
+const buildScenario = (adoption: number): YearPoint[] => {
+  const { floor, cohortRenewal, launchYear, horizonYear } = COUNTERFACTUAL;
+  // include the branch point so the line connects to the measured history
+  const points: YearPoint[] = [{ ...lastMeasuredOffSpec }];
+  let s = lastMeasuredOffSpec.value;
+  for (let year = launchYear; year <= horizonYear; year++) {
+    s = floor + (s - floor) * (1 - cohortRenewal * adoption);
+    points.push({
+      year,
+      value: +s.toFixed(1),
+      kind: "estimated",
+      note: `сценарій «дослухались ${Math.round(adoption * 100)}%» (оцінка)`,
+    });
+  }
+  return points;
+};
+
+/**
+ * Counterfactual "with our system" scenarios, one per adoption level. Each
+ * series starts at the last measured point (shared with the do-nothing line)
+ * and bends downward as guided cohorts enter the labour market.
+ */
+export const WITH_SYSTEM_SCENARIOS: ScenarioSeries[] =
+  COUNTERFACTUAL.adoptionLevels.map((adoption) => ({
+    adoption,
+    adoptionPct: Math.round(adoption * 100),
+    points: buildScenario(adoption),
+  }));
+
 /** State / municipal budget-funded share of enrolled students (vs. contract). */
 export const FUNDING_SPLIT = {
   year: 2025,
@@ -122,7 +229,7 @@ export const CONTEXT = {
 };
 
 export const METHODOLOGY =
-  "Виміряні точки взято з відкритих джерел (різні методики/роки). Єдиної держстатистики частки «не за фахом» немає — оцінки коливаються 40–80%. AI-прогноз % «не за фахом» — лінійний тренд за точками 2007–2023 із насиченням ~85%. AI-прогноз держвидатків — лінійна екстраполяція тренду 2017–2021 (номінальні грн; фактичні воєнні видатки можуть бути нижчими). «Втрачені кошти» — орієнтовна верхня межа: держвидатки на ВО × частка випускників, що працюють не за фахом (робота не за фахом ≠ повністю змарновані кошти).";
+  "Виміряні точки взято з відкритих джерел (різні методики/роки). Єдиної держстатистики частки «не за фахом» немає — оцінки коливаються 40–80%. AI-прогноз % «не за фахом» — лінійний тренд за точками 2007–2023 із насиченням ~85%. AI-прогноз держвидатків — лінійна екстраполяція тренду 2017–2021 (номінальні грн; фактичні воєнні видатки можуть бути нижчими). «Втрачені кошти» — орієнтовна верхня межа: держвидатки на ВО × частка випускників, що працюють не за фахом (робота не за фахом ≠ повністю змарновані кошти). Контрфактичні сценарії «з нашою системою» — ОЦІНКА (не валідований прогноз): від останньої виміряної точки частка «не за фахом» щороку зміщується за формулою sₜ = floor + (sₜ₋₁ − floor)·(1 − cohortRenewal·adoption), де floor — структурний мінімум (~30%), cohortRenewal (~0,12) — частка «свіжих» випускників, яких щороку охоплює система, а adoption (10/20/50%) — частка тих, хто дослухався поради.";
 
 export interface Source {
   title: string;

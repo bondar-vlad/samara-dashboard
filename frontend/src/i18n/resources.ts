@@ -335,6 +335,15 @@ const uk: Dict = {
     chartSpendSub: "Виміряні 2017–2021 + AI-екстраполяція тренду (пунктир)",
     chartPlacesTitle: "Бюджетні місця / зарахування, тис.",
     chartPlacesSub: "Виміряні значення за роками",
+    scenarioTitle: "Контрфактичний сценарій: що було б «з нашою системою»",
+    scenarioSub:
+      "ОЦІНКА (не прогноз): якщо профорієнтація запрацює і частина дітей дослухається порад — частка «не за фахом» почне падати замість зростання до ~85%. Лінії — різні рівні «дослухались».",
+    scenarioHistory: "Факт (виміряно)",
+    scenarioBaseline: "Без змін → ~85%",
+    scenarioAdoption: "Дослухались {{pct}}%",
+    scenarioForecastLabel: "Сценарії (оцінка)",
+    scenarioNote:
+      "Оцінка-сценарій до {{year}} р.: без змін — близько {{base}}% «не за фахом»; якщо порад дослухаються 50% — близько {{best}}%. Це ілюстративна модель, а не валідований прогноз.",
     spendVsWastedTitle: "Скільки держкоштів іде на тих, хто не працює за фахом",
     spendVsWastedSub:
       "Держвидатки на ВО × частка «не за фахом» (орієнтовна верхня межа; останні роки — прогноз)",
@@ -665,6 +674,15 @@ const en: Dict = {
     chartSpendSub: "Measured 2017–2021 + AI trend extrapolation (dashed)",
     chartPlacesTitle: "State-funded places / enrollment, thousands",
     chartPlacesSub: "Measured values by year",
+    scenarioTitle: "Counterfactual scenario: how it would be \u201cwith our system\u201d",
+    scenarioSub:
+      "ESTIMATE (not a forecast): if career guidance starts working and some pupils follow the advice, the off-specialty share begins to fall instead of climbing toward ~85%. The lines show different \u201clistened\u201d levels.",
+    scenarioHistory: "Measured (so far)",
+    scenarioBaseline: "Do nothing → ~85%",
+    scenarioAdoption: "Listened {{pct}}%",
+    scenarioForecastLabel: "Scenarios (estimate)",
+    scenarioNote:
+      "Scenario estimate by {{year}}: doing nothing — about {{base}}% off-specialty; if 50% follow the advice — about {{best}}%. This is an illustrative model, not a validated forecast.",
     spendVsWastedTitle:
       "How much state money goes to those who don't work in their field",
     spendVsWastedSub:

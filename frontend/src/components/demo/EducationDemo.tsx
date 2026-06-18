@@ -22,6 +22,9 @@ import CodeIcon from "@mui/icons-material/Code";
 import ChartFrame from "@/components/charts/ChartFrame";
 import DonutChart, { type DonutSlice } from "@/components/charts/DonutChart";
 import LineChart from "@/components/charts/LineChart";
+import MultiLineChart, {
+  type LineSeries,
+} from "@/components/charts/MultiLineChart";
 import GroupedBarChart, {
   type GroupedDatum,
   type SeriesDef,
@@ -29,6 +32,7 @@ import GroupedBarChart, {
 import {
   BLUE,
   ORANGE,
+  YELLOW,
   RED,
   GREEN,
   TEXT_SECONDARY,
@@ -40,6 +44,9 @@ import {
   BUDGET_PLACES,
   HE_SPENDING_BN,
   SPEND_VS_WASTE,
+  COUNTERFACTUAL,
+  DO_NOTHING_FORECAST,
+  WITH_SYSTEM_SCENARIOS,
   CONTEXT,
   METHODOLOGY,
   SOURCES,
@@ -52,6 +59,9 @@ interface StatCardProps {
   hint: string;
   accent: string;
 }
+
+/** Warm-to-green ramp for the 10% / 20% / 50% "listened" scenarios. */
+const SCENARIO_COLORS = [ORANGE, YELLOW, GREEN];
 
 const StatCard = ({ label, value, hint, accent }: StatCardProps) => (
   <Card variant="outlined" sx={{ height: "100%" }}>
@@ -103,6 +113,40 @@ const EducationDemo = () => {
     [],
   );
 
+  const offSpecHistory = useMemo(
+    () =>
+      NOT_BY_SPECIALTY.filter((d) => d.kind === "measured").map((d) => ({
+        year: d.year,
+        value: d.value,
+      })),
+    [],
+  );
+  const branchYear = offSpecHistory.at(-1)!.year;
+
+  const doNothingTail = useMemo(
+    () =>
+      DO_NOTHING_FORECAST.filter((d) => d.year >= branchYear).map((d) => ({
+        year: d.year,
+        value: d.value,
+      })),
+    [branchYear],
+  );
+
+  const scenarioSeries: LineSeries[] = useMemo(
+    () => [
+      { name: t("demo.scenarioBaseline"), color: RED, points: doNothingTail },
+      ...WITH_SYSTEM_SCENARIOS.map((s, i) => ({
+        name: t("demo.scenarioAdoption", { pct: s.adoptionPct }),
+        color: SCENARIO_COLORS[i % SCENARIO_COLORS.length],
+        points: s.points.map((p) => ({ year: p.year, value: p.value })),
+      })),
+    ],
+    [t, doNothingTail],
+  );
+
+  const doNothingEnd = DO_NOTHING_FORECAST.at(-1)!.value;
+  const bestScenarioEnd = WITH_SYSTEM_SCENARIOS.at(-1)!.points.at(-1)!.value;
+
   const lastMeasuredOffSpec = useMemo(
     () => [...NOT_BY_SPECIALTY].filter((d) => d.kind === "measured").at(-1)!,
     [],
@@ -133,6 +177,9 @@ const EducationDemo = () => {
           budgetPlaces: BUDGET_PLACES,
           stateSpendingBn: HE_SPENDING_BN,
           spendVsWasted: SPEND_VS_WASTE,
+          counterfactual: COUNTERFACTUAL,
+          doNothingForecast: DO_NOTHING_FORECAST,
+          withSystemScenarios: WITH_SYSTEM_SCENARIOS,
           context: CONTEXT,
         },
         null,
@@ -255,6 +302,28 @@ const EducationDemo = () => {
           />
         </ChartFrame>
       </Box>
+
+      <ChartFrame
+        title={t("demo.scenarioTitle")}
+        subheader={t("demo.scenarioSub")}
+        filename="ukraine-off-specialty-scenarios"
+      >
+        <MultiLineChart
+          history={offSpecHistory}
+          historyLabel={t("demo.scenarioHistory")}
+          series={scenarioSeries}
+          yMax={100}
+          ySuffix="%"
+          forecastLabel={t("demo.scenarioForecastLabel")}
+        />
+        <Alert severity="success" variant="outlined" sx={{ mt: 2 }}>
+          {t("demo.scenarioNote", {
+            year: COUNTERFACTUAL.horizonYear,
+            base: Math.round(doNothingEnd),
+            best: Math.round(bestScenarioEnd),
+          })}
+        </Alert>
+      </ChartFrame>
 
       <ChartFrame
         title={t("demo.spendVsWastedTitle")}
