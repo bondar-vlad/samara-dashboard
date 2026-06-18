@@ -18,6 +18,7 @@ import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import GavelIcon from "@mui/icons-material/Gavel";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import WarningCard from "@/components/profile/WarningCard";
+import ImprovementPlan from "@/components/profile/ImprovementPlan";
 import AnalysisStatusBar from "@/components/AnalysisStatusBar";
 import {
   useStudent,
@@ -31,6 +32,14 @@ import type { RedFlag } from "@/lib/types";
 import { severityColor } from "@/components/profile/severity";
 import { GREEN } from "@/theme/colors";
 import { useTranslation } from "@/i18n/I18nProvider";
+
+/** Markers that mean the pupil kept a choice the data flags as a mismatch — these unlock the
+ *  AI "what to pull up" plan toward that chosen profile/direction. */
+const MISMATCH_CODES = new Set([
+  "EDU-PROFILE-MISMATCH",
+  "ADM-DIRECTION-MISMATCH",
+  "ADM-NMT4-MISMATCH",
+]);
 
 function SourceChip({
   icon,
@@ -97,6 +106,11 @@ export default function ChildProfile({ studentId }: { studentId: string }) {
     }
     return Array.from(byCode.values()).sort((a, b) => b.detectedAtUtc.localeCompare(a.detectedAtUtc));
   }, [flags.data]);
+
+  const hasMismatchMarker = useMemo(
+    () => dedupedFlags.some((f) => MISMATCH_CODES.has(f.ruleCode)),
+    [dedupedFlags],
+  );
 
   if (student.isLoading) {
     return (
@@ -257,6 +271,7 @@ export default function ChildProfile({ studentId }: { studentId: string }) {
               {dedupedFlags.map((flag) => (
                 <WarningCard key={flag.id} flag={flag} />
               ))}
+              {hasMismatchMarker && <ImprovementPlan studentId={studentId} />}
             </Stack>
           ) : (
             <Alert severity="success">{t("comparison.noMarkers")}</Alert>

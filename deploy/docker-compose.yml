@@ -127,8 +127,12 @@ services:
       <<: *service-env
       ConnectionStrings__Database: "Host=postgres;Port=5432;Database=childrights_analysis;Username=postgres;Password=postgres"
       Services__Education: "http://education:8080"
-      # Provide an OpenAI key here to enable the LLM provider; empty = deterministic engine.
-      Ai__OpenAi__ApiKey: "${OPENAI_API_KEY:-}"
+    # OpenAI key for the LLM provider — persisted in deploy/openai.env (gitignored) so it
+    # survives restarts, rebuilds and `down -v`. Format (no quotes):  Ai__OpenAi__ApiKey=sk-...
+    # When the file is missing or the key is empty, the analysis service uses the rule engine.
+    env_file:
+      - path: openai.env
+        required: false
     ports:
       - "5105:8080"
     depends_on:

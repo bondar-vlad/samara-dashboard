@@ -15,6 +15,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import type { RedFlag } from "@/lib/types";
 import { useFlagAction } from "@/lib/hooks";
+import { useRole } from "@/access/RoleProvider";
 import { useTranslation } from "@/i18n/I18nProvider";
 import { severityColor, severityHex, audienceLabel } from "./severity";
 
@@ -30,6 +31,7 @@ export default function WarningCard({
 }) {
   const [open, setOpen] = useState(defaultExpanded);
   const { t } = useTranslation();
+  const { can } = useRole();
   const flagAction = useFlagAction();
   const hex = severityHex(flag.severity);
 
@@ -101,7 +103,9 @@ export default function WarningCard({
               ))}
             </Stack>
 
-            {flag.status !== "Resolved" && (
+            {/* Acknowledging / resolving a marker is a case-management action — only roles with
+                the manage:flags permission (CSS specialists) may do it. */}
+            {flag.status !== "Resolved" && can("manage:flags") && (
               <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap", mt: 1.5 }}>
                 {flag.status === "Open" && (
                   <Button

@@ -168,11 +168,19 @@ This starts PostgreSQL, RabbitMQ, all six services and the gateway. Then open:
 - **RabbitMQ UI**: http://localhost:15672 (guest / guest)
 - Swagger for any service, e.g. **Analysis**: http://localhost:5105/swagger
 
-To enable the LLM model, set an OpenAI key before starting:
+To enable the LLM model (AI analysis + the improvement plan), put your OpenAI key in a
+persistent, gitignored file. It survives restarts, rebuilds and `down -v`:
 
 ```powershell
-$env:OPENAI_API_KEY = "sk-..."
-docker compose -f deploy/docker-compose.yml up --build
+Copy-Item deploy/openai.env.example deploy/openai.env   # first time only
+# edit deploy/openai.env  →  Ai__OpenAi__ApiKey=sk-...
+docker compose -f deploy/docker-compose.yml up -d analysis
+```
+
+Verify it loaded (the model appears next to `rule-based-v1`):
+
+```powershell
+Invoke-RestMethod "http://localhost:8080/analysis/api/analysis/models"
 ```
 
 Tear down (and wipe data):
