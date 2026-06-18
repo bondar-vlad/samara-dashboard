@@ -18,6 +18,7 @@ import {
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 import WarningCard from "@/components/profile/WarningCard";
+import ImprovementPlan from "@/components/profile/ImprovementPlan";
 import { useStudentProfileChoice, useStudentRedFlags, useStudentAnalysisStatus } from "@/lib/hooks";
 import type { RedFlag } from "@/lib/types";
 import { BLUE, ORANGE, YELLOW, GREEN } from "@/theme/colors";
@@ -157,6 +158,9 @@ export default function ProfileChoiceAnalysis({ studentId }: { studentId: string
                 </Typography>
               </Stack>
             )}
+
+            {/* AI "what to pull up" tool — shown when the pupil keeps a mismatched choice. */}
+            {mismatch && <ImprovementPlan studentId={studentId} />}
 
             {/* rationale */}
             {data.rationale && (

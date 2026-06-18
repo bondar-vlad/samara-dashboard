@@ -20,6 +20,13 @@ public static class StudentRiskRules
     /// </summary>
     public const int GraduatingGradeLevel = 11;
 
+    /// <summary>
+    /// The grade at which choosing a profile becomes due (the choice is made in grade 9 for
+    /// entering grade 10). From this grade up, a pupil who has not chosen any profile yet is
+    /// itself a risk — they may not have engaged with the decision at all.
+    /// </summary>
+    public const int ProfileDecisionGradeLevel = 9;
+
     public static RuleEvaluation Evaluate(StudentSnapshot snapshot)
     {
         var flags = new List<FlagFinding>();
@@ -135,6 +142,23 @@ public static class StudentRiskRules
         List<FlagFinding> flags,
         List<RecommendationFinding> recommendations)
     {
+        // A pupil at (or past) the profile-choosing grade who has not picked any profile yet
+        // is itself a risk — independent of how much grade evidence exists. Flag it so the
+        // school can start the orientation early, before the decision is left too late.
+        if (snapshot.GradeLevel >= ProfileDecisionGradeLevel && snapshot.DesiredProfiles.Count == 0)
+        {
+            flags.Add(new FlagFinding(
+                "EDU-PROFILE-NOT-CHOSEN",
+                FlagSeverity.Yellow,
+                "Профіль ще не обрано",
+                $"Учень {snapshot.GradeLevel} класу ще не обрав профіль навчання. Це ризик — " +
+                "вибір може відкладатися без профорієнтаційної підтримки.",
+                Agency.Education,
+                [AudienceRole.ClassTeacher, AudienceRole.Student, AudienceRole.Parent],
+                ["Провести профорієнтаційну консультацію",
+                 "Допомогти учню визначитися з профілем на основі сильних предметів і тем"]));
+        }
+
         var profileScores = ProfileScoringMap.ScoreProfiles(snapshot.SubjectAverages, snapshot.TopicAverages);
         if (profileScores.Count == 0)
         {

@@ -2,6 +2,7 @@ using ChildRights.BuildingBlocks.Application.Messaging;
 using ChildRights.BuildingBlocks.Domain.SharedKernel;
 using ChildRights.BuildingBlocks.Infrastructure.Web;
 using ChildRights.Analysis.Application.Abstractions;
+using ChildRights.Analysis.Application.Improvement.Queries;
 using ChildRights.Analysis.Application.Runs.Commands;
 using ChildRights.Analysis.Application.Runs.Queries;
 using ChildRights.Analysis.Application.Universities.Commands;
@@ -68,6 +69,16 @@ public sealed class AnalysisController(IDispatcher dispatcher, IAiAnalysisProvid
     [HttpGet("students/{studentId:guid}/university-fit/{programId:guid}")]
     public async Task<IActionResult> ProgramGap(Guid studentId, Guid programId, CancellationToken cancellationToken)
         => ToResult(await Dispatcher.Query(new GetStudentProgramGapQuery(studentId, programId), cancellationToken));
+
+    /// <summary>
+    /// AI improvement plan ("що підтягнути") toward the pupil's <b>chosen</b> profile (grades ≤10)
+    /// or admission direction (grade 11) — for when the pupil keeps a choice the data flags as a
+    /// mismatch. AI-only: when no model is connected the result reports it (Available=false)
+    /// rather than inventing advice.
+    /// </summary>
+    [HttpGet("students/{studentId:guid}/improvement-plan")]
+    public async Task<IActionResult> ImprovementPlan(Guid studentId, CancellationToken cancellationToken)
+        => ToResult(await Dispatcher.Query(new GetStudentImprovementPlanQuery(studentId), cancellationToken));
 
     /// <summary>Records the pupil's interest in a specialty (feeds depersonalised university demand).</summary>
     [HttpPost("students/{studentId:guid}/program-interest/{programId:guid}")]

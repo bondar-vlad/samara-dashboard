@@ -20,6 +20,7 @@ import type {
   MedicalVisit,
   SocialCase,
   BullyingReport,
+  StudentImprovementPlan,
 } from "./types";
 
 /**
@@ -139,4 +140,8 @@ export const api = {
     getJson<SocialCase[]>(`${SOC}/social/cases?subjectId=${id}`),
   getClassBullyingReports: (classId: string) =>
     getJson<BullyingReport[]>(`${JUV}/juvenile/bullying-reports?classId=${classId}`),
+
+  // AI improvement plan toward the pupil's chosen profile/direction ("що підтягнути").
+  getStudentImprovementPlan: (id: string) =>
+    getJson<StudentImprovementPlan>(`${ANL}/analysis/students/${id}/improvement-plan`),
 };

@@ -99,9 +99,17 @@ public sealed class EducationDataSeederTests : IDisposable
         var topicGrades = await _context.Grades.CountAsync(g => g.Topic != null);
         Assert.True(topicGrades > 0, "Expected topic-level grades for topic-aware analysis.");
 
-        // Every pupil has at least one self-reported desired profile (set in the constructor).
+        // Most pupils self-report a desired profile in the constructor, but a deliberate
+        // minority of pre-graduating pupils (≤10) have NOT chosen one yet — the cohort that
+        // surfaces the "profile not chosen" risk flag.
         var students = await _context.Students.ToListAsync();
-        Assert.All(students, s => Assert.NotEmpty(s.DesiredProfiles));
+        var withChoice = students.Count(s => s.DesiredProfiles.Count > 0);
+        Assert.True(withChoice >= students.Count * 0.6,
+            "Most pupils should self-report a desired profile.");
+
+        var notChosen = students.Count(s => s.GradeLevel <= 10 && s.DesiredProfiles.Count == 0);
+        Assert.True(notChosen > 0,
+            "Some pre-graduating pupils should have no desired profile yet (not-chosen risk cohort).");
     }
 
     public void Dispose()

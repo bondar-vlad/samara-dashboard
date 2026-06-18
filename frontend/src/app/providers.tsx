@@ -9,6 +9,7 @@ import {
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import theme from "@/theme/theme";
 import { I18nProvider } from "@/i18n/I18nProvider";
+import { RoleProvider } from "@/access/RoleProvider";
 
 /**
  * Client-side providers: TanStack Query (the current name for react-query) +
@@ -32,7 +33,9 @@ export default function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <I18nProvider>{children}</I18nProvider>
+        <I18nProvider>
+          <RoleProvider>{children}</RoleProvider>
+        </I18nProvider>
       </ThemeProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>

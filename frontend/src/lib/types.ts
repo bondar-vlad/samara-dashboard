@@ -396,3 +396,32 @@ export interface BullyingReport {
   summary: string;
   filedOn: string;
 }
+
+// ─── AI improvement plan ("що підтягнути" toward a chosen profile/direction) ────────
+
+export interface ImprovementItem {
+  /** "subject" | "topic" */
+  area: string;
+  name: string;
+  current: number;
+  target: number;
+  gap: number;
+  advice: string;
+}
+
+/** GET /analysis/api/analysis/students/{id}/improvement-plan */
+export interface StudentImprovementPlan {
+  studentId: string;
+  /** False when no AI model is connected (the plan is AI-only). */
+  available: boolean;
+  modelName: string;
+  /** "profile" | "direction" */
+  targetKind: string;
+  targetName: string;
+  hasChoice: boolean;
+  isMismatch: boolean;
+  summary: string;
+  items: ImprovementItem[];
+  steps: string[];
+  message: string | null;
+}

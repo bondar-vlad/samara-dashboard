@@ -41,6 +41,10 @@ public static class DependencyInjection
         // The deterministic engine is always available.
         services.AddSingleton<IAiAnalysisProvider, RuleBasedAiAnalysisProvider>();
 
+        // The improvement coach is AI-only: it defaults to "not connected" and is replaced by the
+        // real coach when an LLM is configured (last registration wins for the single resolve).
+        services.AddSingleton<IImprovementCoach, UnavailableImprovementCoach>();
+
         // The LLM provider is registered only when an API key is configured.
         var aiOptions = configuration.GetSection(AiOptions.SectionName).Get<AiOptions>() ?? new AiOptions();
         if (aiOptions.OpenAi.Enabled)
@@ -51,6 +55,7 @@ public static class DependencyInjection
                 .AddStandardResilienceHandler();
 
             services.AddSingleton<IAiAnalysisProvider, OpenAiAnalysisProvider>();
+            services.AddSingleton<IImprovementCoach, OpenAiImprovementCoach>();
         }
 
         services.AddSingleton<IAiAnalysisProviderFactory, AiAnalysisProviderFactory>();

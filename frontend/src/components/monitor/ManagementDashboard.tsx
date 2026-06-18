@@ -19,6 +19,8 @@ import { useDashboardSummary, useRedFlags, useStudents, useSchools } from "@/lib
 import type { SchoolSummary } from "@/lib/types";
 import { severityColor, severityHex } from "@/components/profile/severity";
 import { BLUE, ORANGE, GREEN, RED } from "@/theme/colors";
+import { useRole } from "@/access/RoleProvider";
+import { useScopeData } from "@/access/useScopeData";
 import { useTranslation } from "@/i18n/I18nProvider";
 
 function Kpi({ label, value, color }: { label: string; value: number | string; color: string }) {
@@ -40,6 +42,8 @@ const CRITICAL = new Set(["Red", "Orange"]);
 
 export default function ManagementDashboard() {
   const { t } = useTranslation();
+  const { can } = useRole();
+  const scope = useScopeData();
   const summary = useDashboardSummary();
   const flags = useRedFlags({ scope: "Student" });
   const students = useStudents();
@@ -57,9 +61,18 @@ export default function ManagementDashboard() {
     return m;
   }, [schools.data]);
 
+  // Flags narrowed to the active role's territorial scope (region/community/school).
+  const scopedFlags = useMemo(
+    () =>
+      (flags.data ?? []).filter(
+        (f) => !scope.isNarrowed || scope.schoolInScope(studentSchool.get(f.subjectId)),
+      ),
+    [flags.data, scope, studentSchool],
+  );
+
   const bySchool = useMemo(() => {
     const agg = new Map<string, { name: string; community: string; critical: number; total: number }>();
-    for (const f of flags.data ?? []) {
+    for (const f of scopedFlags) {
       const schoolId = studentSchool.get(f.subjectId);
       if (!schoolId) continue;
       const info = schoolInfo.get(schoolId);
@@ -69,11 +82,11 @@ export default function ManagementDashboard() {
       agg.set(schoolId, e);
     }
     return [...agg.values()].sort((a, b) => b.critical - a.critical || b.total - a.total);
-  }, [flags.data, studentSchool, schoolInfo]);
+  }, [scopedFlags, studentSchool, schoolInfo]);
 
   const byCommunity = useMemo(() => {
     const agg = new Map<string, { critical: number; total: number }>();
-    for (const f of flags.data ?? []) {
+    for (const f of scopedFlags) {
       const schoolId = studentSchool.get(f.subjectId);
       const community = schoolId ? schoolInfo.get(schoolId)?.community ?? "—" : "—";
       const e = agg.get(community) ?? { critical: 0, total: 0 };
@@ -84,19 +97,42 @@ export default function ManagementDashboard() {
     return [...agg.entries()]
       .map(([community, v]) => ({ community, ...v }))
       .sort((a, b) => b.critical - a.critical || b.total - a.total);
-  }, [flags.data, studentSchool, schoolInfo]);
+  }, [scopedFlags, studentSchool, schoolInfo]);
 
   const ruleCounts = useMemo(() => {
     const m: Record<string, number> = {};
-    for (const f of flags.data ?? []) m[f.ruleCode] = (m[f.ruleCode] ?? 0) + 1;
+    for (const f of scopedFlags) m[f.ruleCode] = (m[f.ruleCode] ?? 0) + 1;
     return m;
-  }, [flags.data]);
+  }, [scopedFlags]);
 
   const attendance = ruleCounts["EDU-ATTENDANCE"] ?? 0;
   const profileMismatch = ruleCounts["EDU-PROFILE-MISMATCH"] ?? 0;
   const admissionMismatch = (ruleCounts["ADM-NMT4-MISMATCH"] ?? 0) + (ruleCounts["ADM-DIRECTION-MISMATCH"] ?? 0);
 
-  const sev = summary.data?.bySeverity ?? [];
+  // KPIs + severity + recent markers follow the scope when it is narrowed,
+  // otherwise fall back to the program-wide summary from the API.
+  const totalFlags = scope.isNarrowed ? scopedFlags.length : summary.data?.totalFlags ?? 0;
+  const openFlags = scope.isNarrowed
+    ? scopedFlags.filter((f) => f.status === "Open").length
+    : summary.data?.openFlags ?? 0;
+
+  const sev = useMemo(() => {
+    if (!scope.isNarrowed) return summary.data?.bySeverity ?? [];
+    const order = ["Red", "Orange", "Yellow", "Green"];
+    const counts: Record<string, number> = {};
+    for (const f of scopedFlags) counts[f.severity] = (counts[f.severity] ?? 0) + 1;
+    return order
+      .filter((s) => counts[s])
+      .map((severity) => ({ severity, count: counts[severity] }));
+  }, [scope.isNarrowed, summary.data, scopedFlags]);
+
+  const recentFlags = useMemo(() => {
+    if (!scope.isNarrowed) return summary.data?.recentFlags ?? [];
+    return [...scopedFlags]
+      .sort((a, b) => (a.detectedAtUtc < b.detectedAtUtc ? 1 : -1))
+      .slice(0, 8);
+  }, [scope.isNarrowed, scopedFlags, summary.data]);
+
   const maxSev = Math.max(1, ...sev.map((s) => s.count));
 
   if (summary.isLoading) {
@@ -122,8 +158,8 @@ export default function ManagementDashboard() {
       </Box>
 
       <Stack direction="row" spacing={2} useFlexGap sx={{ flexWrap: "wrap" }}>
-        <Kpi label={t("mgmt.kpiOpenFlags")} value={summary.data.openFlags} color={RED} />
-        <Kpi label={t("mgmt.kpiTotalFlags")} value={summary.data.totalFlags} color={ORANGE} />
+        <Kpi label={t("mgmt.kpiOpenFlags")} value={openFlags} color={RED} />
+        <Kpi label={t("mgmt.kpiTotalFlags")} value={totalFlags} color={ORANGE} />
         <Kpi label={t("mgmt.kpiRecommendations")} value={summary.data.totalRecommendations} color={BLUE} />
         <Kpi label={t("mgmt.kpiRuns")} value={summary.data.totalRuns} color={GREEN} />
       </Stack>
@@ -219,26 +255,30 @@ export default function ManagementDashboard() {
       <Card variant="outlined">
         <CardHeader title={t("mgmt.recentFlags")} />
         <CardContent>
-          <Stack spacing={1} divider={<Divider flexItem />}>
-            {summary.data.recentFlags.map((f) => (
-              <Stack
-                key={f.id}
-                direction="row"
-                spacing={1}
-                component={NextLink}
-                href={`/children/${f.subjectId}`}
-                sx={{ alignItems: "center", textDecoration: "none", color: "inherit", py: 0.5 }}
-              >
-                <Chip size="small" color={severityColor(f.severity)} label={t(`severity.${f.severity}`)} />
-                <Typography variant="body2" sx={{ fontWeight: 600, flexShrink: 0 }}>
-                  {f.subjectName}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" noWrap>
-                  {f.title}
-                </Typography>
-              </Stack>
-            ))}
-          </Stack>
+          {can("view:personalData") ? (
+            <Stack spacing={1} divider={<Divider flexItem />}>
+              {recentFlags.map((f) => (
+                <Stack
+                  key={f.id}
+                  direction="row"
+                  spacing={1}
+                  component={NextLink}
+                  href={`/children/${f.subjectId}`}
+                  sx={{ alignItems: "center", textDecoration: "none", color: "inherit", py: 0.5 }}
+                >
+                  <Chip size="small" color={severityColor(f.severity)} label={t(`severity.${f.severity}`)} />
+                  <Typography variant="body2" sx={{ fontWeight: 600, flexShrink: 0 }}>
+                    {f.subjectName}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" noWrap>
+                    {f.title}
+                  </Typography>
+                </Stack>
+              ))}
+            </Stack>
+          ) : (
+            <Alert severity="info">{t("access.publicNotice")}</Alert>
+          )}
         </CardContent>
       </Card>
     </Stack>

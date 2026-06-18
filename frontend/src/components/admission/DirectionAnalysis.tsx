@@ -18,6 +18,7 @@ import {
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 import { useStudentDirection, useAdmissionDirections } from "@/lib/hooks";
+import ImprovementPlan from "@/components/profile/ImprovementPlan";
 import { BLUE, ORANGE, YELLOW, GREEN } from "@/theme/colors";
 import { useTranslation } from "@/i18n/I18nProvider";
 
@@ -135,6 +136,9 @@ export default function DirectionAnalysis({ studentId }: { studentId: string }) 
                 </Typography>
               </Stack>
             )}
+
+            {/* AI "what to pull up" tool — shown when the pupil keeps a mismatched choice. */}
+            {mismatch && <ImprovementPlan studentId={studentId} />}
 
             {/* NMT scores, if submitted */}
             {nmtEntries.length > 0 && (

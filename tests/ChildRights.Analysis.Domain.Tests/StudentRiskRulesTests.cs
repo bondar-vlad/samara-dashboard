@@ -157,4 +157,36 @@ public sealed class StudentRiskRulesTests
             r => r.Kind is RecommendationKind.ProfileChoice or RecommendationKind.ProfileChange);
         Assert.DoesNotContain(evaluation.Flags, f => f.RuleCode == "EDU-PROFILE-MISMATCH");
     }
+
+    [Fact]
+    public void Grade9_pupil_without_a_chosen_profile_raises_not_chosen_flag()
+    {
+        var evaluation = StudentRiskRules.Evaluate(Snapshot(
+            gradeLevel: 9,
+            desiredProfiles: [],
+            subjectAverages: new Dictionary<string, double> { ["Біологія"] = 10 }));
+
+        var flag = Assert.Single(evaluation.Flags, f => f.RuleCode == "EDU-PROFILE-NOT-CHOSEN");
+        Assert.Equal(FlagSeverity.Yellow, flag.Severity);
+    }
+
+    [Fact]
+    public void Pupil_with_a_chosen_profile_raises_no_not_chosen_flag()
+    {
+        var evaluation = StudentRiskRules.Evaluate(Snapshot(
+            gradeLevel: 9,
+            desiredProfiles: [EducationProfile.Medical],
+            subjectAverages: new Dictionary<string, double> { ["Біологія"] = 12, ["Хімія"] = 11 }));
+
+        Assert.DoesNotContain(evaluation.Flags, f => f.RuleCode == "EDU-PROFILE-NOT-CHOSEN");
+    }
+
+    [Fact]
+    public void Graduating_pupil_without_a_profile_raises_no_not_chosen_flag()
+    {
+        // Grade 11 pupils are on the admission track — profile choice no longer applies.
+        var evaluation = StudentRiskRules.Evaluate(Snapshot(gradeLevel: 11, desiredProfiles: []));
+
+        Assert.DoesNotContain(evaluation.Flags, f => f.RuleCode == "EDU-PROFILE-NOT-CHOSEN");
+    }
 }

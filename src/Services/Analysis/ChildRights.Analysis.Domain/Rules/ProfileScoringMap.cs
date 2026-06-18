@@ -159,4 +159,27 @@ public static class ProfileScoringMap
                 return average * evidenceFactor;
             });
     }
+
+    /// <summary>
+    /// The school subjects and curriculum topics that feed a given cluster — i.e. the areas a
+    /// pupil aiming for that cluster needs to be strong in. Derived by inverting the subject/topic
+    /// maps. Used to build a concrete "what to pull up" gap analysis toward a chosen profile.
+    /// </summary>
+    public static (IReadOnlyList<string> Subjects, IReadOnlyList<string> Topics) KeySignalsForCluster(
+        ProfileCluster cluster)
+    {
+        var subjects = SubjectMap
+            .Where(kv => kv.Value.Any(p => ProfileTaxonomy.ClusterOf(p) == cluster))
+            .Select(kv => kv.Key)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var topics = TopicMap
+            .Where(kv => kv.Value.Any(p => ProfileTaxonomy.ClusterOf(p) == cluster))
+            .Select(kv => kv.Key)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return (subjects, topics);
+    }
 }

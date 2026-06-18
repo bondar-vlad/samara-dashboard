@@ -202,6 +202,21 @@ export function useClassBullyingReports(classId: string | null | undefined) {
   });
 }
 
+/**
+ * AI improvement plan ("що підтягнути") toward the pupil's chosen profile/direction.
+ * Fetched on demand (it calls the LLM) — pass `enabled` from a button click. Does not retry,
+ * and the backend itself returns `available:false` rather than erroring when no model is set.
+ */
+export function useStudentImprovementPlan(id: string | null, enabled: boolean) {
+  return useQuery({
+    queryKey: ["improvement-plan", id],
+    queryFn: () => api.getStudentImprovementPlan(id as string),
+    enabled: enabled && !!id,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+}
+
 /** Acknowledge or resolve a red flag, then refresh the flag lists and dashboard. */
 export function useFlagAction() {
   const qc = useQueryClient();

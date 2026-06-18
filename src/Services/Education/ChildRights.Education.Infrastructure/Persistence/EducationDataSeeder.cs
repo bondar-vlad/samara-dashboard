@@ -170,10 +170,21 @@ internal sealed class EducationDataSeeder(EducationDbContext context) : IDataSee
         var studentId = Guid.Parse($"55555555-0000-0000-0000-{++_studentSeq:D12}");
         var archetype = Archetypes[WeightedPick(plan.ArchetypeWeights)];
 
-        // Desired profiles: usually the archetype cluster, sometimes a deliberate mismatch.
-        var desired = _rng.NextDouble() < 0.22
-            ? new[] { MismatchProfile(archetype.Cluster) }
-            : archetype.Desired;
+        // Desired profiles: most pupils self-report one (their archetype cluster, sometimes a
+        // deliberate mismatch). A minority of pre-graduating pupils (≤10) have NOT chosen yet —
+        // passed as null because the aggregate rejects an empty list — which surfaces the
+        // "profile not chosen" risk flag.
+        EducationProfile[]? desired;
+        if (grade <= 10 && _rng.NextDouble() < 0.15)
+        {
+            desired = null;
+        }
+        else
+        {
+            desired = _rng.NextDouble() < 0.22
+                ? [MismatchProfile(archetype.Cluster)]
+                : archetype.Desired;
+        }
 
         // Declared profile (grade 10+) is one the institution actually offers.
         EducationProfile? declared = grade >= 10 && plan.OfferedProfiles.Count > 0
