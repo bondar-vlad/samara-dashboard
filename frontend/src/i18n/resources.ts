@@ -396,6 +396,12 @@ const uk: Dict = {
         sees: "Персональний дашборд моєї дитини: статуси, нагадування, виплати, поради",
         restriction: "Тільки своя дитина (через Дія.Підпис)",
       },
+      CHILD: {
+        name: "Дитина (власний кабінет)",
+        level: "Власні дані",
+        sees: "Мій профіль: статуси, рекомендації, що підтягнути, нагадування",
+        restriction: "Тільки власні дані (через Дія.Підпис, 14+)",
+      },
       M_V: {
         name: "Міжвідомчий користувач",
         level: "Свій вертикальний зріз",
@@ -422,6 +428,7 @@ const uk: Dict = {
       nationalService: "Нацсоцслужба",
       globalAdmin: "Глобал Адміністратор",
       endUser: "Кінцевий користувач",
+      childUser: "Кінцевий користувач (дитина)",
       interagency: "Міжвідомча роль",
       administrator: "Адміністратор",
       citizen: "Громадянин",
@@ -457,8 +464,11 @@ const uk: Dict = {
     publicNotice:
       "Публічна частина: персональні дані приховані, відображаються тільки агреговані знеособлені показники.",
     parentTitle: "Дашборд моєї дитини",
+    childTitle: "Мій кабінет",
     parentNotice:
       "Батьківський доступ: показано дані лише вашої дитини (підтвердження через Дія.Підпис).",
+    childNotice:
+      "Доступ дитини: показано лише твої власні дані (підтвердження через Дія.Підпис).",
     openChild: "Відкрити профіль дитини",
     noChild: "Демо-дитину не знайдено.",
     interagencyTitle: "Міжвідомчий моніторинг: {{agency}}",
@@ -472,6 +482,12 @@ const uk: Dict = {
     adminRolesCount: "Налаштовано ролей: {{count}}",
     openAccessMatrix: "Відкрити матрицю ролей",
     scopedEmpty: "За обраним фільтром доступу немає даних.",
+    restrictedTitle: "Розділ недоступний для цієї ролі",
+    restrictedNotice:
+      "Ця сторінка недоступна для вашого рівня доступу. Оберіть доступний розділ або змініть роль угорі.",
+    goToDashboard: "Перейти до дашборду",
+    goToAccess: "Відкрити адмін-панель",
+    homeRestrictedHint: "Для цієї ролі головна показує лише дозволені дані. Персональні дані учнів приховані.",
   },
   improvement: {
     title: "Що підтягнути до обраної цілі",
@@ -867,6 +883,12 @@ const en: Dict = {
         sees: "My child's dashboard: statuses, reminders, payments, tips",
         restriction: "Own child only (via Diia.Signature)",
       },
+      CHILD: {
+        name: "Child (own account)",
+        level: "Own data",
+        sees: "My profile: statuses, recommendations, what to pull up, reminders",
+        restriction: "Own data only (via Diia.Signature, 14+)",
+      },
       M_V: {
         name: "Interagency user",
         level: "Own vertical slice",
@@ -893,6 +915,7 @@ const en: Dict = {
       nationalService: "National Social Service",
       globalAdmin: "Global administrator",
       endUser: "End user",
+      childUser: "End user (child)",
       interagency: "Interagency role",
       administrator: "Administrator",
       citizen: "Citizen",
@@ -928,8 +951,11 @@ const en: Dict = {
     publicNotice:
       "Public area: personal data is hidden, only aggregated de-identified indicators are shown.",
     parentTitle: "My child's dashboard",
+    childTitle: "My account",
     parentNotice:
       "Parent access: only your child's data is shown (confirmed via Diia.Signature).",
+    childNotice:
+      "Child access: only your own data is shown (confirmed via Diia.Signature).",
     openChild: "Open child profile",
     noChild: "Demo child not found.",
     interagencyTitle: "Interagency monitoring: {{agency}}",
@@ -943,6 +969,12 @@ const en: Dict = {
     adminRolesCount: "Roles configured: {{count}}",
     openAccessMatrix: "Open the role matrix",
     scopedEmpty: "No data for the selected access filter.",
+    restrictedTitle: "This section is not available for this role",
+    restrictedNotice:
+      "This page is not available for your access level. Choose an available section or switch role above.",
+    goToDashboard: "Go to dashboard",
+    goToAccess: "Open admin panel",
+    homeRestrictedHint: "For this role the home page shows only permitted data. Pupils' personal data is hidden.",
   },
   improvement: {
     title: "What to pull up toward your chosen goal",

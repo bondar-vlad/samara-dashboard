@@ -23,6 +23,7 @@ export type RoleCode =
   | "N_R" // НСССУ / Регіональний контролер
   | "N_N" // Мінсоцполітики / Глобал-Адмін
   | "B" //   Батьки (мобільний додаток ЦШД)
+  | "CHILD" // Дитина (власний кабінет)
   | "M_V" // Міжвідомчий користувач
   | "ADM" // Адміністратор системи
   | "P"; //  Публічний / неавторизований
@@ -79,6 +80,7 @@ export interface RoleDefinition {
     | "nationalService"
     | "globalAdmin"
     | "endUser"
+    | "childUser"
     | "interagency"
     | "administrator"
     | "citizen";
@@ -245,6 +247,19 @@ export const ROLES: Record<RoleCode, RoleDefinition> = {
     pin: { child: true },
   },
 
+  CHILD: {
+    code: "CHILD",
+    badge: "Д",
+    level: "child",
+    category: "childUser",
+    view: "parent",
+    selectors: [],
+    canSeePersonalData: true,
+    permissions: ["view:childProfile", "view:personalData"],
+    nav: ["dashboard"],
+    pin: { child: true },
+  },
+
   M_V: {
     code: "M_V",
     badge: "М-В",
@@ -293,6 +308,7 @@ export const ROLE_ORDER: RoleCode[] = [
   "N_R",
   "N_N",
   "B",
+  "CHILD",
   "M_V",
   "ADM",
   "P",

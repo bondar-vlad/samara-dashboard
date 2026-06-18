@@ -1,20 +1,11 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import NextLink from "next/link";
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Container,
-  Box,
-  Button,
-  Stack,
-} from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Box, Container, Stack, Typography } from "@mui/material";
+import AppHeader from "@/components/AppHeader";
+import AccessGate from "@/components/access/AccessGate";
 import DirectionAnalysis from "@/components/admission/DirectionAnalysis";
 import AnalysisStatusBar from "@/components/AnalysisStatusBar";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslation } from "@/i18n/I18nProvider";
 
 export default function StudentDirectionPage() {
@@ -24,30 +15,17 @@ export default function StudentDirectionPage() {
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
-      <AppBar position="static">
-        <Toolbar>
-          <Button
-            component={NextLink}
-            href="/"
-            startIcon={<ArrowBackIcon />}
-            sx={{ color: "#fff", mr: 2 }}
-          >
-            {t("header.backHome")}
-          </Button>
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
-            {t("header.directionAnalysis")}
-          </Typography>
-          <LanguageSwitcher />
-        </Toolbar>
-      </AppBar>
-
+      <AppHeader showHome />
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        {id && (
+        <AccessGate permission="view:childProfile">
           <Stack spacing={2}>
-            <AnalysisStatusBar studentId={id} />
-            <DirectionAnalysis studentId={id} />
+            <Typography variant="h5" sx={{ fontWeight: 800 }}>
+              {t("header.directionAnalysis")}
+            </Typography>
+            {id && <AnalysisStatusBar studentId={id} />}
+            {id && <DirectionAnalysis studentId={id} />}
           </Stack>
-        )}
+        </AccessGate>
       </Container>
     </Box>
   );

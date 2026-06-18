@@ -112,17 +112,19 @@ function PublicDashboard() {
 /** Parent app: a single bound child (via Дія.Підпис) — own child only. */
 function ParentDashboard() {
   const { t } = useTranslation();
+  const { role } = useRole();
   const students = useStudents();
   const child = students.data?.[0];
+  const isChild = role === "CHILD";
 
   return (
     <Stack spacing={3}>
       <Box>
         <Typography variant="h5" sx={{ fontWeight: 800 }}>
-          {t("access.parentTitle")}
+          {t(isChild ? "access.childTitle" : "access.parentTitle")}
         </Typography>
       </Box>
-      <Alert severity="info">{t("access.parentNotice")}</Alert>
+      <Alert severity="info">{t(isChild ? "access.childNotice" : "access.parentNotice")}</Alert>
       <Card variant="outlined">
         <CardContent>
           {students.isLoading ? (

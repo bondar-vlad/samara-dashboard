@@ -1,20 +1,11 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import NextLink from "next/link";
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Container,
-  Box,
-  Button,
-  Stack,
-} from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Box, Container, Stack, Typography } from "@mui/material";
+import AppHeader from "@/components/AppHeader";
+import AccessGate from "@/components/access/AccessGate";
 import ProfileChoiceAnalysis from "@/components/admission/ProfileChoiceAnalysis";
 import AnalysisStatusBar from "@/components/AnalysisStatusBar";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslation } from "@/i18n/I18nProvider";
 
 export default function StudentProfileChoicePage() {
@@ -24,30 +15,17 @@ export default function StudentProfileChoicePage() {
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
-      <AppBar position="static">
-        <Toolbar>
-          <Button
-            component={NextLink}
-            href="/"
-            startIcon={<ArrowBackIcon />}
-            sx={{ color: "#fff", mr: 2 }}
-          >
-            {t("header.backHome")}
-          </Button>
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
-            {t("header.profileChoiceAnalysis")}
-          </Typography>
-          <LanguageSwitcher />
-        </Toolbar>
-      </AppBar>
-
+      <AppHeader showHome />
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        {id && (
+        <AccessGate permission="view:childProfile">
           <Stack spacing={2}>
-            <AnalysisStatusBar studentId={id} />
-            <ProfileChoiceAnalysis studentId={id} />
+            <Typography variant="h5" sx={{ fontWeight: 800 }}>
+              {t("header.profileChoiceAnalysis")}
+            </Typography>
+            {id && <AnalysisStatusBar studentId={id} />}
+            {id && <ProfileChoiceAnalysis studentId={id} />}
           </Stack>
-        )}
+        </AccessGate>
       </Container>
     </Box>
   );

@@ -1,10 +1,13 @@
 "use client";
 
-import { Typography, Container, Box, Stack, Divider } from "@mui/material";
+import NextLink from "next/link";
+import { Typography, Container, Box, Stack, Divider, Alert, Button } from "@mui/material";
 import AppHeader from "@/components/AppHeader";
+import AccessBanner from "@/components/access/AccessBanner";
 import ProfileChoiceDashboard from "@/components/admission/ProfileChoiceDashboard";
 import DirectionDashboard from "@/components/admission/DirectionDashboard";
 import FourthSubjectDashboard from "@/components/admission/FourthSubjectDashboard";
+import { useRole } from "@/access/RoleProvider";
 import { useTranslation } from "@/i18n/I18nProvider";
 
 function StepHeader({ step, title, subtitle }: { step: number; title: string; subtitle: string }) {
@@ -40,8 +43,54 @@ function StepHeader({ step, title, subtitle }: { step: number; title: string; su
   );
 }
 
+/** For non-specialist roles the home page never lists pupils — it explains the role and routes
+ *  the user to the surface they are entitled to. */
+function RoleHomeNotice() {
+  const { t } = useTranslation();
+  const { role, def } = useRole();
+
+  const notice =
+    def.view === "public"
+      ? t("access.publicNotice")
+      : def.view === "parent"
+        ? role === "CHILD"
+          ? t("access.childNotice")
+          : t("access.parentNotice")
+        : def.view === "interagency"
+          ? t("access.interagencyNotice")
+          : def.view === "admin"
+            ? t("access.adminSubtitle")
+            : t("access.restrictedNotice");
+
+  const adminCta = def.view === "admin";
+
+  return (
+    <Alert
+      severity="info"
+      action={
+        <Button
+          color="inherit"
+          size="small"
+          component={NextLink}
+          href={adminCta ? "/access" : "/dashboard"}
+        >
+          {t(adminCta ? "access.goToAccess" : "access.goToDashboard")}
+        </Button>
+      }
+    >
+      {notice}
+    </Alert>
+  );
+}
+
 export default function HomePage() {
   const { t } = useTranslation();
+  const { def } = useRole();
+
+  // The cross-pupil education journey lists pupils by name, so it is shown only to roles that may
+  // see personal data across pupils (territorial specialists). Everyone else gets a role notice.
+  const showJourney = def.view === "operational" || def.view === "analytics";
+
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
       <AppHeader />
@@ -58,21 +107,30 @@ export default function HomePage() {
             </Typography>
           </Box>
 
-          {/* Step 1 — profile high school (10th grade) */}
-          <StepHeader step={1} title={t("home.step1Title")} subtitle={t("home.step1Sub")} />
-          <ProfileChoiceDashboard />
+          {/* Always show who is signed in and the active scope, so the view is unambiguous. */}
+          <AccessBanner />
 
-          <Divider />
+          {showJourney ? (
+            <>
+              {/* Step 1 — profile high school (10th grade) */}
+              <StepHeader step={1} title={t("home.step1Title")} subtitle={t("home.step1Sub")} />
+              <ProfileChoiceDashboard />
 
-          {/* Step 2 — NMT 4th subject (taken before admission) */}
-          <StepHeader step={2} title={t("home.step2Title")} subtitle={t("home.step2Sub")} />
-          <FourthSubjectDashboard />
+              <Divider />
 
-          <Divider />
+              {/* Step 2 — NMT 4th subject (taken before admission) */}
+              <StepHeader step={2} title={t("home.step2Title")} subtitle={t("home.step2Sub")} />
+              <FourthSubjectDashboard />
 
-          {/* Step 3 — university direction (chosen with NMT results) */}
-          <StepHeader step={3} title={t("home.step3Title")} subtitle={t("home.step3Sub")} />
-          <DirectionDashboard />
+              <Divider />
+
+              {/* Step 3 — university direction (chosen with NMT results) */}
+              <StepHeader step={3} title={t("home.step3Title")} subtitle={t("home.step3Sub")} />
+              <DirectionDashboard />
+            </>
+          ) : (
+            <RoleHomeNotice />
+          )}
         </Stack>
       </Container>
     </Box>
