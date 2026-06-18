@@ -9,9 +9,11 @@ import {
   Container,
   Box,
   Button,
+  Stack,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ProfileChoiceAnalysis from "@/components/admission/ProfileChoiceAnalysis";
+import AnalysisStatusBar from "@/components/AnalysisStatusBar";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslation } from "@/i18n/I18nProvider";
 
@@ -40,7 +42,12 @@ export default function StudentProfileChoicePage() {
       </AppBar>
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        {id && <ProfileChoiceAnalysis studentId={id} />}
+        {id && (
+          <Stack spacing={2}>
+            <AnalysisStatusBar studentId={id} />
+            <ProfileChoiceAnalysis studentId={id} />
+          </Stack>
+        )}
       </Container>
     </Box>
   );

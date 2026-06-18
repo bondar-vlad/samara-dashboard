@@ -14,6 +14,8 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import type { RedFlag } from "@/lib/types";
+import { useFlagAction } from "@/lib/hooks";
+import { useTranslation } from "@/i18n/I18nProvider";
 import { severityColor, severityHex, audienceLabel } from "./severity";
 
 export default function WarningCard({
@@ -27,7 +29,18 @@ export default function WarningCard({
   defaultExpanded?: boolean;
 }) {
   const [open, setOpen] = useState(defaultExpanded);
+  const { t } = useTranslation();
+  const flagAction = useFlagAction();
   const hex = severityHex(flag.severity);
+
+  const statusLabel =
+    flag.status === "Resolved"
+      ? t("warningCard.statusResolved")
+      : flag.status === "Acknowledged"
+        ? t("warningCard.statusAcknowledged")
+        : t("warningCard.statusOpen");
+  const statusColor: "success" | "info" | "default" =
+    flag.status === "Resolved" ? "success" : flag.status === "Acknowledged" ? "info" : "default";
 
   return (
     <Paper
@@ -53,6 +66,7 @@ export default function WarningCard({
                 color={severityColor(flag.severity)}
                 variant="outlined"
               />
+              <Chip size="small" variant="outlined" color={statusColor} label={statusLabel} />
             </Stack>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
               {flag.description}
@@ -86,6 +100,30 @@ export default function WarningCard({
                 <Chip key={a} size="small" label={audienceLabel(a)} />
               ))}
             </Stack>
+
+            {flag.status !== "Resolved" && (
+              <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap", mt: 1.5 }}>
+                {flag.status === "Open" && (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    disabled={flagAction.isPending}
+                    onClick={() => flagAction.mutate({ id: flag.id, action: "acknowledge" })}
+                  >
+                    {t("warningCard.acknowledge")}
+                  </Button>
+                )}
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="success"
+                  disabled={flagAction.isPending}
+                  onClick={() => flagAction.mutate({ id: flag.id, action: "resolve" })}
+                >
+                  {t("warningCard.resolve")}
+                </Button>
+              </Stack>
+            )}
           </Box>
         </Stack>
 

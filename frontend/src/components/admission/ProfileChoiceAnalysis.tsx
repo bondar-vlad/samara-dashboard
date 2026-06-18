@@ -18,7 +18,7 @@ import {
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 import WarningCard from "@/components/profile/WarningCard";
-import { useStudentProfileChoice, useStudentRedFlags } from "@/lib/hooks";
+import { useStudentProfileChoice, useStudentRedFlags, useStudentAnalysisStatus } from "@/lib/hooks";
 import type { RedFlag } from "@/lib/types";
 import { BLUE, ORANGE, YELLOW, GREEN } from "@/theme/colors";
 import { useTranslation } from "@/i18n/I18nProvider";
@@ -76,6 +76,7 @@ export default function ProfileChoiceAnalysis({ studentId }: { studentId: string
   const { t } = useTranslation();
   const { data, isLoading, isError } = useStudentProfileChoice(studentId);
   const flags = useStudentRedFlags(studentId);
+  const analyzed = useStudentAnalysisStatus(studentId).data?.analyzed ?? false;
 
   const maxScore = 12;
   const mismatch = !!data?.hasChoice && !data?.isMatch;
@@ -230,6 +231,8 @@ export default function ProfileChoiceAnalysis({ studentId }: { studentId: string
                     />
                   ))}
                 </Stack>
+              ) : !analyzed ? (
+                <Alert severity="info">{t("analysis.notAnalyzedShort")}</Alert>
               ) : (
                 <Alert severity="success">{t("comparison.noMarkers")}</Alert>
               )}

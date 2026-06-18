@@ -1,24 +1,42 @@
 "use client";
 
-import NextLink from "next/link";
-import { AppBar, Toolbar, Typography, Container, Box, Button, Stack, Divider } from "@mui/material";
-import InsightsIcon from "@mui/icons-material/Insights";
+import { Typography, Container, Box, Stack, Divider } from "@mui/material";
+import AppHeader from "@/components/AppHeader";
 import ProfileChoiceDashboard from "@/components/admission/ProfileChoiceDashboard";
 import DirectionDashboard from "@/components/admission/DirectionDashboard";
 import FourthSubjectDashboard from "@/components/admission/FourthSubjectDashboard";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslation } from "@/i18n/I18nProvider";
 
-function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
+function StepHeader({ step, title, subtitle }: { step: number; title: string; subtitle: string }) {
   return (
-    <Box>
-      <Typography variant="h5" sx={{ fontWeight: 800 }}>
-        {title}
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-        {subtitle}
-      </Typography>
-    </Box>
+    <Stack direction="row" spacing={2} sx={{ alignItems: "flex-start" }}>
+      <Box
+        sx={{
+          flexShrink: 0,
+          width: 40,
+          height: 40,
+          borderRadius: "50%",
+          bgcolor: "primary.main",
+          color: "#fff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontWeight: 800,
+          fontSize: 18,
+          mt: 0.25,
+        }}
+      >
+        {step}
+      </Box>
+      <Box>
+        <Typography variant="h5" sx={{ fontWeight: 800 }}>
+          {title}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          {subtitle}
+        </Typography>
+      </Box>
+    </Stack>
   );
 }
 
@@ -26,38 +44,35 @@ export default function HomePage() {
   const { t } = useTranslation();
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
-            {t("brand")}
-          </Typography>
-          <Button
-            component={NextLink}
-            href="/demo"
-            startIcon={<InsightsIcon />}
-            sx={{ color: "#fff", mr: 2 }}
-          >
-            {t("header.demoLink")}
-          </Button>
-          <LanguageSwitcher />
-          <Typography variant="body2" sx={{ opacity: 0.8 }}>
-            {t("header.monitoring")}
-          </Typography>
-        </Toolbar>
-      </AppBar>
+      <AppHeader />
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Stack spacing={5}>
-          {/* Рішення 1 — 10 клас: вибір профілю навчання (профільна школа) */}
-          <SectionHeader title={t("home.section10Title")} subtitle={t("home.section10Sub")} />
+          {/* Intro: the pupil's journey, in chronological order */}
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+              {t("home.heroTitle")}
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mt: 1, maxWidth: 760 }}>
+              {t("home.heroSubtitle")}
+            </Typography>
+          </Box>
+
+          {/* Step 1 — profile high school (10th grade) */}
+          <StepHeader step={1} title={t("home.step1Title")} subtitle={t("home.step1Sub")} />
           <ProfileChoiceDashboard />
 
           <Divider />
 
-          {/* Рішення 2 — випуск 11 класу: вступ до ВНЗ за НМТ */}
-          <SectionHeader title={t("home.section11Title")} subtitle={t("home.section11Sub")} />
-          <DirectionDashboard />
+          {/* Step 2 — NMT 4th subject (taken before admission) */}
+          <StepHeader step={2} title={t("home.step2Title")} subtitle={t("home.step2Sub")} />
           <FourthSubjectDashboard />
+
+          <Divider />
+
+          {/* Step 3 — university direction (chosen with NMT results) */}
+          <StepHeader step={3} title={t("home.step3Title")} subtitle={t("home.step3Sub")} />
+          <DirectionDashboard />
         </Stack>
       </Container>
     </Box>

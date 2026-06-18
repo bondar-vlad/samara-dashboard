@@ -31,9 +31,10 @@ internal sealed class GetFourthSubjectRecommendationQueryHandler(
         }
 
         var subjectAverages = profile.SubjectAverages.ToDictionary(s => s.Subject, s => s.Average);
+        var gradeCounts = profile.SubjectAverages.ToDictionary(s => s.Subject, s => s.Count);
         var topicAverages = profile.TopicAverages.Select(t => new TopicScore(t.Subject, t.Topic, t.Average)).ToList();
 
-        var recommendation = FourthSubjectRecommender.Recommend(subjectAverages, topicAverages);
+        var recommendation = FourthSubjectRecommender.Recommend(subjectAverages, topicAverages, gradeCounts);
 
         var choice = await context.StudentAdmissionChoices
             .FirstOrDefaultAsync(c => c.StudentId == query.StudentId, cancellationToken);

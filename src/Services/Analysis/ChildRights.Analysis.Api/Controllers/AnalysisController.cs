@@ -47,6 +47,11 @@ public sealed class AnalysisController(IDispatcher dispatcher, IAiAnalysisProvid
     public async Task<IActionResult> GetRuns([FromQuery] int take = 50, CancellationToken cancellationToken = default)
         => ToResult(await Dispatcher.Query(new ListAnalysisRunsQuery(take), cancellationToken));
 
+    /// <summary>Whether a pupil has been analysed yet (drives the "run analysis" prompt + button).</summary>
+    [HttpGet("students/{studentId:guid}/status")]
+    public async Task<IActionResult> StudentStatus(Guid studentId, CancellationToken cancellationToken)
+        => ToResult(await Dispatcher.Query(new GetStudentAnalysisStatusQuery(studentId), cancellationToken));
+
     /// <summary>
     /// Ranks university specialties by how well the pupil fits them, with concrete topic/subject
     /// improvement advice for each. The pupil-facing "which university suits me" view.

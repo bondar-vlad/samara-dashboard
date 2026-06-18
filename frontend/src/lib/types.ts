@@ -327,3 +327,72 @@ export interface StudentProfileChoice {
   ranked: ClusterScore[];
   rationale: string;
 }
+
+/** GET /analysis/api/analysis/students/{id}/status */
+export interface StudentAnalysisStatus {
+  analyzed: boolean;
+  lastAnalyzedUtc: string | null;
+  runCount: number;
+}
+
+// ─── Management dashboard + cross-agency child profile ────────────────────────
+
+export interface SeverityCount {
+  severity: string;
+  count: number;
+}
+
+/** GET /analysis/api/dashboard/summary */
+export interface DashboardSummary {
+  totalFlags: number;
+  openFlags: number;
+  bySeverity: SeverityCount[];
+  totalRecommendations: number;
+  totalRuns: number;
+  recentFlags: RedFlag[];
+}
+
+/** GET /education/api/schools */
+export interface SchoolSummary {
+  id: string;
+  name: string;
+  community: string;
+  region: string;
+  institutionType: string;
+  institutionTypeName: string;
+  direction: string;
+  studentCount: number;
+  offeredProfileCount: number;
+}
+
+/** GET /medical/api/medical/visits?studentId= */
+export interface MedicalVisit {
+  id: string;
+  studentId: string;
+  studentName: string;
+  conditionCategory: string;
+  date: string;
+  note: string | null;
+}
+
+/** GET /social/api/social/cases?subjectId= */
+export interface SocialCase {
+  id: string;
+  subjectId: string;
+  subjectName: string;
+  sourceAgency: string;
+  severity: string;
+  reason: string;
+  status: string;
+  openedOn: string;
+}
+
+/** GET /juvenile/api/juvenile/bullying-reports?classId= */
+export interface BullyingReport {
+  id: string;
+  classId: string;
+  schoolId: string;
+  severity: string;
+  summary: string;
+  filedOn: string;
+}

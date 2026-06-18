@@ -190,28 +190,59 @@ internal sealed class EducationDataSeeder(EducationDbContext context) : IDataSee
 
     private void SeedGrades(Guid studentId, Archetype archetype)
     {
-        // Strong topics dominate (graded 10–12) — these steer the recommended cluster.
+        var graded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        // Strong topics dominate (graded 10–12, several assessments each) — they steer both the
+        // recommended profile cluster and the 4th-НМТ-subject recommendation.
         foreach (var (subject, topic) in archetype.StrongTopics)
         {
-            var entries = _rng.Next(2, 4);
-            for (var i = 0; i < entries; i++)
-            {
-                AddGrade(studentId, subject, topic, _rng.Next(10, 13));
-            }
+            AddSubjectGrades(studentId, subject, topic, 10, 12, _rng.Next(3, 6));
+            graded.Add(subject);
         }
 
         foreach (var subject in archetype.StrongSubjects)
         {
-            AddGrade(studentId, subject, null, _rng.Next(9, 12));
+            AddSubjectGrades(studentId, subject, null, 9, 12, _rng.Next(4, 7));
+            graded.Add(subject);
         }
 
         foreach (var subject in archetype.WeakSubjects)
         {
-            AddGrade(studentId, subject, null, _rng.Next(5, 9));
+            AddSubjectGrades(studentId, subject, null, 4, 7, _rng.Next(3, 5));
+            graded.Add(subject);
         }
 
-        // Everyone has a general language grade (realistic + feeds humanities signal mildly).
-        AddGrade(studentId, "Українська мова", null, _rng.Next(7, 11));
+        // The rest of the core curriculum — a realistic spread of marks around the pupil's own
+        // ability, so every subject (incl. each elective НМТ option) has several grades.
+        SeedCoreGradebook(studentId, graded);
+    }
+
+    /// <summary>
+    /// Adds a handful of grades for each core-curriculum subject the pupil hasn't been graded in
+    /// yet, clustered around the pupil's baseline ability, so the gradebook is full and realistic.
+    /// </summary>
+    private void SeedCoreGradebook(Guid studentId, IEnumerable<string> alreadyGraded)
+    {
+        var graded = new HashSet<string>(alreadyGraded, StringComparer.OrdinalIgnoreCase);
+        var baseline = _rng.Next(7, 10);
+        foreach (var subject in CoreSubjects)
+        {
+            if (!graded.Add(subject))
+            {
+                continue;
+            }
+
+            AddSubjectGrades(studentId, subject, null,
+                Math.Max(4, baseline - 2), Math.Min(12, baseline + 2), _rng.Next(3, 6));
+        }
+    }
+
+    private void AddSubjectGrades(Guid studentId, string subject, string? topic, int min, int max, int count)
+    {
+        for (var i = 0; i < count; i++)
+        {
+            AddGrade(studentId, subject, topic, _rng.Next(min, max + 1));
+        }
     }
 
     private void SeedAttendance(Guid studentId)
@@ -295,6 +326,12 @@ internal sealed class EducationDataSeeder(EducationDbContext context) : IDataSee
         AddGrade(SofiiaId, "Англійська мова", "Комунікації", 12);
         AddGrade(SofiiaId, "Українська література", null, 11);
         AddGrade(SofiiaId, "Математика", null, 8);
+
+        // Round out the named pupils' gradebooks, keeping their scripted strengths above intact.
+        SeedCoreGradebook(MariiaId, ["Українська література"]);
+        SeedCoreGradebook(AndriiId, ["Біологія", "Хімія", "Математика"]);
+        SeedCoreGradebook(OlehId, ["Інформатика", "Математика"]);
+        SeedCoreGradebook(SofiiaId, ["Англійська мова", "Українська література", "Математика"]);
     }
 
     // ----------------------------------------------------------------------------------
@@ -353,6 +390,14 @@ internal sealed class EducationDataSeeder(EducationDbContext context) : IDataSee
     // ----------------------------------------------------------------------------------
 
     private const int StudentsPerClass = 18;
+
+    // Subjects every pupil studies. Includes every elective НМТ option (Біологія, Хімія, Фізика,
+    // Географія, Англійська мова, Українська література) so the 4th-subject ranking is credible.
+    private static readonly string[] CoreSubjects =
+    [
+        "Українська мова", "Українська література", "Математика", "Історія",
+        "Англійська мова", "Біологія", "Хімія", "Фізика", "Географія", "Інформатика"
+    ];
 
     private static readonly string[] ClassLetters = ["А", "Б", "В", "Г", "Д"];
 

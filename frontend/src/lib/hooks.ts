@@ -153,6 +153,69 @@ export function useStudentProfileChoice(id: string | null) {
   });
 }
 
+export function useStudentAnalysisStatus(id: string | null) {
+  return useQuery({
+    queryKey: ["analysis-status", id],
+    queryFn: () => api.getStudentAnalysisStatus(id as string),
+    enabled: !!id,
+  });
+}
+
+// ─── Management dashboard + risk monitor + cross-agency profile ──────────────────
+
+export function useDashboardSummary() {
+  return useQuery({ queryKey: ["dashboard-summary"], queryFn: api.getDashboardSummary });
+}
+
+export function useRedFlags(params: { severity?: string; scope?: string; subjectId?: string; status?: string } = {}) {
+  return useQuery({
+    queryKey: ["red-flags-list", params],
+    queryFn: () => api.listRedFlags(params),
+  });
+}
+
+export function useSchools() {
+  return useQuery({ queryKey: ["schools"], queryFn: api.listSchools, staleTime: Infinity });
+}
+
+export function useStudentMedicalVisits(id: string | null) {
+  return useQuery({
+    queryKey: ["medical-visits", id],
+    queryFn: () => api.getStudentMedicalVisits(id as string),
+    enabled: !!id,
+  });
+}
+
+export function useStudentSocialCases(id: string | null) {
+  return useQuery({
+    queryKey: ["social-cases", id],
+    queryFn: () => api.getStudentSocialCases(id as string),
+    enabled: !!id,
+  });
+}
+
+export function useClassBullyingReports(classId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["bullying-reports", classId],
+    queryFn: () => api.getClassBullyingReports(classId as string),
+    enabled: !!classId,
+  });
+}
+
+/** Acknowledge or resolve a red flag, then refresh the flag lists and dashboard. */
+export function useFlagAction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, action }: { id: string; action: "acknowledge" | "resolve" }) =>
+      action === "resolve" ? api.resolveFlag(id) : api.acknowledgeFlag(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["red-flags"] });
+      qc.invalidateQueries({ queryKey: ["red-flags-list"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-summary"] });
+    },
+  });
+}
+
 /** Runs analysis for a student, then refreshes everything that depends on it. */
 export function useRunAnalysis() {
   const qc = useQueryClient();
@@ -164,6 +227,7 @@ export function useRunAnalysis() {
       qc.invalidateQueries({ queryKey: ["red-flags", id] });
       qc.invalidateQueries({ queryKey: ["recommendations", id] });
       qc.invalidateQueries({ queryKey: ["university-fit", id] });
+      qc.invalidateQueries({ queryKey: ["analysis-status", id] });
     },
   });
 }

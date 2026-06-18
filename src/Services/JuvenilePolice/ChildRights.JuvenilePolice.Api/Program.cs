@@ -11,6 +11,7 @@ builder.AddServiceDefaults("Juvenile Police API");
 builder.Services.AddApiControllers();
 builder.Services.AddPostgresDbContext<JuvenilePoliceDbContext>(builder.Configuration);
 builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<JuvenilePoliceDbContext>());
+builder.Services.AddScoped<IDataSeeder, JuvenilePoliceDataSeeder>();
 builder.Services.AddEventBus(builder.Configuration);
 
 var app = builder.Build();

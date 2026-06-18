@@ -14,6 +14,12 @@ import type {
   StudentDirection,
   SchoolProfileChoices,
   StudentProfileChoice,
+  StudentAnalysisStatus,
+  DashboardSummary,
+  SchoolSummary,
+  MedicalVisit,
+  SocialCase,
+  BullyingReport,
 } from "./types";
 
 /**
@@ -24,6 +30,9 @@ import type {
  */
 const EDU = "/bff/education/api";
 const ANL = "/bff/analysis/api";
+const MED = "/bff/medical/api";
+const SOC = "/bff/social/api";
+const JUV = "/bff/juvenile/api";
 
 async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(url, { headers: { Accept: "application/json" } });
@@ -42,6 +51,13 @@ async function postJson<T>(url: string): Promise<T> {
     throw new Error(`POST ${url} failed: ${res.status} ${res.statusText}`);
   }
   return res.json() as Promise<T>;
+}
+
+async function postVoid(url: string): Promise<void> {
+  const res = await fetch(url, { method: "POST", headers: { "Content-Length": "0" } });
+  if (!res.ok) {
+    throw new Error(`POST ${url} failed: ${res.status} ${res.statusText}`);
+  }
 }
 
 export const api = {
@@ -94,4 +110,33 @@ export const api = {
 
   getStudentProfileChoice: (id: string) =>
     getJson<StudentProfileChoice>(`${ANL}/profile/students/${id}`),
+
+  // Per-pupil analysis status (analysed yet? when?)
+  getStudentAnalysisStatus: (id: string) =>
+    getJson<StudentAnalysisStatus>(`${ANL}/analysis/students/${id}/status`),
+
+  // Management dashboard + risk monitor
+  getDashboardSummary: () => getJson<DashboardSummary>(`${ANL}/dashboard/summary`),
+
+  listRedFlags: (params: { severity?: string; scope?: string; subjectId?: string; status?: string } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.severity) qs.set("severity", params.severity);
+    if (params.scope) qs.set("scope", params.scope);
+    if (params.subjectId) qs.set("subjectId", params.subjectId);
+    if (params.status) qs.set("status", params.status);
+    const q = qs.toString();
+    return getJson<RedFlag[]>(`${ANL}/red-flags${q ? `?${q}` : ""}`);
+  },
+
+  acknowledgeFlag: (id: string) => postVoid(`${ANL}/red-flags/${id}/acknowledge`),
+  resolveFlag: (id: string) => postVoid(`${ANL}/red-flags/${id}/resolve`),
+
+  // Cross-agency signals (electronic child profile)
+  listSchools: () => getJson<SchoolSummary[]>(`${EDU}/schools`),
+  getStudentMedicalVisits: (id: string) =>
+    getJson<MedicalVisit[]>(`${MED}/medical/visits?studentId=${id}`),
+  getStudentSocialCases: (id: string) =>
+    getJson<SocialCase[]>(`${SOC}/social/cases?subjectId=${id}`),
+  getClassBullyingReports: (classId: string) =>
+    getJson<BullyingReport[]>(`${JUV}/juvenile/bullying-reports?classId=${classId}`),
 };

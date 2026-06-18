@@ -20,30 +20,33 @@ public static class FourthSubjectRecommender
 {
     public static FourthSubjectRecommendation Recommend(
         IReadOnlyDictionary<string, double> subjectAverages,
-        IReadOnlyList<TopicScore> topicAverages)
+        IReadOnlyList<TopicScore> topicAverages,
+        IReadOnlyDictionary<string, int>? gradeCounts = null)
     {
         var accumulator = new Dictionary<NmtSubject, (double Sum, double Weight, int Count)>();
 
-        void Add(NmtSubject subject, double value, double weight)
+        void Add(NmtSubject subject, double value, double weight, int count)
         {
             var current = accumulator.GetValueOrDefault(subject);
-            accumulator[subject] = (current.Sum + (value * weight), current.Weight + weight, current.Count + 1);
+            accumulator[subject] = (current.Sum + (value * weight), current.Weight + weight, current.Count + count);
         }
 
         foreach (var (subject, average) in subjectAverages)
         {
             if (NmtSubjectCatalog.FromSchoolSubject(subject) is { } nmt)
             {
-                Add(nmt, average, 1.0);
+                // Evidence = the actual number of grades for that subject (defaults to 1).
+                Add(nmt, average, 1.0, gradeCounts?.GetValueOrDefault(subject) ?? 1);
             }
         }
 
-        // Topics reinforce the subject they belong to (weighted higher, like profile scoring).
+        // Topics reinforce the score (weighted higher) but do not add to the grade count, since the
+        // subject average above already counts every grade, topic-tagged ones included.
         foreach (var topic in topicAverages)
         {
             if (NmtSubjectCatalog.FromSchoolSubject(topic.Subject) is { } nmt)
             {
-                Add(nmt, topic.Average, 1.5);
+                Add(nmt, topic.Average, 1.5, 0);
             }
         }
 
